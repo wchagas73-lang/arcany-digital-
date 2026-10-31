@@ -14,6 +14,13 @@ type Company = {
   reviews: number;
   mapsUrl: string | null;
   types: string[];
+  googleProfileFound?: boolean;
+  websiteListed?: boolean;
+  menuOnlineStatus?: string;
+  ecommerceStatus?: string;
+  inventorySystemStatus?: string;
+  crmStatus?: string;
+  financialSystemStatus?: string;
 };
 
 export default function ProspeccaoPage() {
@@ -168,7 +175,7 @@ export default function ProspeccaoPage() {
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <h3 style={{ margin: 0, color: "#f3f6fb", fontSize: 13, fontWeight: 650 }}>{company.name}</h3>
                     <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 11, lineHeight: 1.5 }}>{company.address}</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 9, color: "#aeb9ca", fontSize: 11 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 9, color: "#aeb9ca", fontSize: 10 }}>\n                      {company.googleProfileFound && <span style={signalPill}>Perfil localizado no Google</span>}\n                      {company.websiteListed && <span style={signalPill}>Site listado</span>}\n                      {!company.websiteListed && <span style={signalWarning}>Site não listado (confirmar)</span>}\n                      <span style={signalPill}>Cardápio: investigar</span>\n                      <span style={signalPill}>E-commerce: investigar</span>\n                      <span style={signalPill}>Estoque / CRM / financeiro: confirmar com a empresa</span>\n                    </div>\n                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 9, color: "#aeb9ca", fontSize: 11 }}>
                       {company.rating !== null && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Star size={12} /> {company.rating.toFixed(1)} ({company.reviews})</span>}
                       {company.phone && <a href={`tel:${company.phone}`} style={linkStyle}><Phone size={12} /> {company.phone}</a>}
                       {!company.website && <span style={{ color: "#e9bd72" }}>Sem site listado no Google</span>}
@@ -237,4 +244,4 @@ const companyCardStyle = {
   borderRadius: 10,
   background: "rgba(255,255,255,.015)",
 };
-const linkStyle = { display: "inline-flex", alignItems: "center", gap: 5, color: "#b8adff", fontSize: 11, textDecoration: "none" };
+const linkStyle = { display: "inline-flex", alignItems: "center", gap: 5, color: "#b8adff", fontSize: 11, textDecoration: "none" };\nconst signalPill = { border: "1px solid rgba(139,124,255,.25)", background: "rgba(139,124,255,.08)", color: "#c9c1ff", borderRadius: 20, padding: "4px 7px" };\nconst signalWarning = { border: "1px solid rgba(233,189,114,.3)", background: "rgba(233,189,114,.08)", color: "#e9bd72", borderRadius: 20, padding: "4px 7px" };
