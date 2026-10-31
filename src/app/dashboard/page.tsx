@@ -1,57 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ArrowUpRight, Building2, ContactRound, Search, Sparkles, Target, Workflow } from "lucide-react";
 
-const stats = [
-  { label: "Empresas encontradas", value: "0", note: "Aguardando conexão com fontes de dados", icon: Building2 },
-  { label: "Leads cadastrados", value: "0", note: "Seus contatos ficarão organizados aqui", icon: Target },
-  { label: "Oportunidades", value: "0", note: "Acompanhe suas negociações no CRM", icon: Workflow },
-  { label: "Demonstrações criadas", value: "0", note: "Sites personalizados para apresentar", icon: Sparkles }
-];
-
+type Lead = { stage?: string };
+type Company = { id: string };
 const modules = [
-  { title: "Prospecção inteligente", detail: "Encontre negócios por cidade e segmento.", icon: Search, tag: "Próxima etapa" },
-  { title: "Análise de presença digital", detail: "Identifique sites, avaliações e canais online.", icon: ActivityIcon, tag: "Planejado" },
-  { title: "CRM comercial", detail: "Organize contatos, etapas e acompanhamentos.", icon: ContactRound, tag: "Estrutura inicial" }
+  { title: "Prospecção inteligente", detail: "Encontre negócios por cidade e segmento.", icon: Search, tag: "Pesquisar empresas", href: "/prospeccao" },
+  { title: "Análise de presença digital", detail: "Identifique sites, avaliações e canais online.", icon: ArrowUpRight, tag: "Fazer diagnóstico", href: "/diagnostico" },
+  { title: "CRM comercial", detail: "Organize contatos, etapas e acompanhamentos.", icon: ContactRound, tag: "Abrir pipeline", href: "/crm" }
 ];
-
-function ActivityIcon({ size = 17 }: { size?: number }) {
-  return <ArrowUpRight size={size} />;
-}
 
 export default function DashboardPage() {
+  const [stats,setStats]=useState({companies:0,leads:0,opportunities:0,clients:0});
+  const [loaded,setLoaded]=useState(false);
+  useEffect(()=>{
+    try{
+      const companies=JSON.parse(localStorage.getItem("arcany-companies-v1")||"[]") as Company[];
+      const leads=JSON.parse(localStorage.getItem("arcany-leads-v1")||"[]") as Lead[];
+      setStats({companies:companies.length,leads:leads.length,opportunities:leads.filter(l=>["novo","contato","proposta","negociacao"].includes(l.stage||"")).length,clients:leads.filter(l=>l.stage==="cliente").length});
+    }catch{/* Mantém indicadores zerados se o armazenamento local estiver inválido. */}
+    setLoaded(true);
+  },[]);
+  const cards=[
+    {label:"Empresas na base",value:stats.companies,note:"Registros organizados",icon:Building2,href:"/empresas"},
+    {label:"Leads cadastrados",value:stats.leads,note:"Contatos na carteira",icon:Target,href:"/leads"},
+    {label:"Oportunidades abertas",value:stats.opportunities,note:"Negociações em andamento",icon:Workflow,href:"/crm"},
+    {label:"Clientes fechados",value:stats.clients,note:"Negócios conquistados",icon:Sparkles,href:"/crm"}
+  ];
   return <AppShell><div className="content">
     <div className="eyebrow">Seu centro de inteligência comercial</div>
     <h1 className="page-title">Visão geral</h1>
-    <p className="page-description">Bem-vindo à Arcany Digital. Aqui será o ponto de partida para encontrar empresas, descobrir oportunidades e transformar prospecção em novos negócios.</p>
-    <div className="stat-grid">
-      {stats.map((stat) => { const Icon = stat.icon; return <div className="panel stat-card" key={stat.label}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}><span className="stat-label">{stat.label}</span><Icon size={17} color="#a99fff" /></div>
-        <div className="stat-value">{stat.value}</div><div className="stat-note">{stat.note}</div>
-      </div>; })}
+    <p className="page-description">Bem-vindo à Arcany Digital. Encontre empresas, registre oportunidades, acompanhe negociações e prepare soluções digitais para cada negócio.</p>
+    <div className="stat-grid" style={{marginTop:22}}>
+      {cards.map((stat)=>{const Icon=stat.icon;return <Link href={stat.href} className="panel stat-card" key={stat.label} style={{textDecoration:"none",display:"block"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><span className="stat-label">{stat.label}</span><Icon size={17} color="#a99fff"/></div><div className="stat-value">{loaded?stat.value:"—"}</div><div className="stat-note">{stat.note}</div></Link>;})}
     </div>
-    <div className="section-grid">
+    <div className="section-grid" style={{marginTop:16}}>
       <section className="panel">
-        <div className="panel-heading"><div><div className="panel-title">Comece por aqui</div><div className="panel-subtitle">Acesse os principais módulos da plataforma</div></div><span style={{ color: "#8e82f3", fontSize: 10 }}>ARCANY</span></div>
-        <div className="feature-list">
-          {modules.map((module) => { const Icon = module.icon; return <div className="feature-row" key={module.title}>
-            <div className="feature-icon"><Icon size={16} /></div><div><div className="feature-name">{module.title}</div><div className="feature-detail">{module.detail}</div></div><span className="coming-tag">{module.tag}</span>
-          </div>; })}
-        </div>
+        <div className="panel-heading"><div><div className="panel-title">Comece por aqui</div><div className="panel-subtitle">Acesse os principais módulos da plataforma</div></div><span style={{color:"#8e82f3",fontSize:10}}>ARCANY</span></div>
+        <div className="feature-list">{modules.map((module)=>{const Icon=module.icon;return <Link href={module.href} className="feature-row" key={module.title} style={{textDecoration:"none"}}><div className="feature-icon"><Icon size={16}/></div><div style={{flex:1}}><div className="feature-name">{module.title}</div><div className="feature-detail">{module.detail}</div></div><span className="coming-tag">{module.tag}</span></Link>;})}</div>
       </section>
       <section className="panel">
-        <div className="panel-heading"><div><div className="panel-title">Próximo passo</div><div className="panel-subtitle">Vamos preparar sua primeira prospecção</div></div><Sparkles size={17} color="#a99fff" /></div>
-        <div className="empty-state">
-          <div className="empty-icon"><Search size={19} /></div>
-          <div className="empty-title">Sua operação começa aqui</div>
-          <p className="empty-copy">Escolha uma cidade e um segmento para iniciar a busca quando conectarmos as fontes de dados.</p>
-          <Link className="action-button" href="/prospeccao" style={{ marginTop: 17 }}>Conhecer prospecção <ArrowUpRight size={14} /></Link>
-        </div>
+        <div className="panel-heading"><div><div className="panel-title">Próxima ação</div><div className="panel-subtitle">Transforme pesquisa em oportunidade</div></div><Sparkles size={17} color="#a99fff"/></div>
+        <div className="empty-state"><div className="empty-icon"><Search size={19}/></div><div className="empty-title">Encontre seu próximo cliente</div><p className="empty-copy">Pesquise por cidade e segmento, analise os sinais públicos e salve as empresas que merecem uma abordagem comercial.</p><Link className="action-button" href="/prospeccao" style={{marginTop:17}}>Iniciar prospecção <ArrowUpRight size={14}/></Link></div>
       </section>
     </div>
-    <div className="panel page-card" style={{ marginTop: 16 }}>
-      <h2>Uma plataforma, várias oportunidades</h2>
-      <p>A Arcany está sendo construída para atender diferentes nichos de mercado — do comércio local aos prestadores de serviços. Nesta versão inicial, a navegação e a identidade visual estão prontas; os dados reais entrarão com as integrações das próximas fases.</p>
-    </div>
+    <div className="panel page-card" style={{marginTop:16}}><h2>Uma plataforma, vários mercados</h2><p>A Arcany está sendo construída para atender diferentes nichos — do comércio local aos prestadores de serviços. Os indicadores acima refletem os cadastros deste navegador; a sincronização em nuvem será implementada na próxima fase de infraestrutura.</p></div>
   </div></AppShell>;
 }
