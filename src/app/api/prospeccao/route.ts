@@ -79,6 +79,13 @@ export async function POST(request: Request) {
       reviews: place.userRatingCount ?? 0,
       mapsUrl: place.googleMapsUri ?? null,
       types: place.types ?? [],
+      googleProfileFound: true,
+      websiteListed: Boolean(place.websiteUri),
+      menuOnlineStatus: "nao_verificado",
+      ecommerceStatus: "nao_verificado",
+      inventorySystemStatus: "nao_verificado",
+      crmStatus: "nao_verificado",
+      financialSystemStatus: "nao_verificado",
     }));
 
     const filtered = places.filter((place) => {
@@ -93,6 +100,7 @@ export async function POST(request: Request) {
       totalShown: filtered.length,
       query,
       source: "Google Places",
+      note: "A busca localiza perfis públicos. Cardápio, e-commerce e sistemas internos não são confirmados por esta consulta."
     });
   } catch (error) {
     console.error("Places search failed:", error);
