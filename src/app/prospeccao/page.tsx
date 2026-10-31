@@ -21,6 +21,7 @@ export default function ProspeccaoPage() {
   const [state, setState] = useState("MG");
   const [segment, setSegment] = useState("");
   const [status, setStatus] = useState("todos");
+  const [focus, setFocus] = useState("geral");
   const [results, setResults] = useState<Company[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ export default function ProspeccaoPage() {
       const response = await fetch("/api/prospeccao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city, state, segment, status }),
+        body: JSON.stringify({ city, state, segment, status, focus }),
       });
       const data = await response.json();
 
@@ -73,6 +74,7 @@ export default function ProspeccaoPage() {
     setState("MG");
     setSegment("");
     setStatus("todos");
+    setFocus("geral");
     setResults([]);
     setSearched(false);
     setMessage("");
@@ -144,7 +146,7 @@ export default function ProspeccaoPage() {
           <div className="panel-heading">
             <div>
               <div className="panel-title">Empresas encontradas</div>
-              <div className="panel-subtitle">{searched ? `${results.length} exibida(s) · ${totalFound} retornada(s) pelo Google` : "Os resultados da pesquisa aparecerão aqui."}</div>
+              <div className="panel-subtitle">{searched ? `${results.length} exibida(s) · ${totalFound} retornada(s) pelo Google` : "Os resultados da pesquisa aparecerão aqui."}</div>\n              {searched && <div style={{ color: "#b8adff", fontSize: 10, marginTop: 5 }}>Foco selecionado: {focusLabels[focus] ?? focusLabels.geral}</div>}
             </div>
             <span className="coming-tag">Google Places</span>
           </div>
@@ -186,14 +188,14 @@ export default function ProspeccaoPage() {
 
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 16, color: "var(--muted)", fontSize: 11, lineHeight: 1.6 }}>
           <Sparkles size={15} color="#a99fff" style={{ flex: "0 0 auto", marginTop: 1 }} />
-          A Arcany será multissetorial: você poderá pesquisar qualquer nicho. Os dados exibidos dependem das informações disponibilizadas pelo Google Places.
+          Importante: o Google Places ajuda a localizar empresas e consultar dados públicos do perfil, como site, telefone e avaliações. Ele não revela se a empresa usa estoque, CRM ou sistema financeiro interno. Cardápios e lojas online precisam ser verificados no site ou em fontes públicas; sistemas internos devem ser confirmados em conversa com o responsável. A Arcany não deve marcar uma ausência como fato sem verificação.
         </div>
       </div>
     </AppShell>
   );
 }
 
-const segmentSuggestions = [
+const focusLabels: Record<string, string> = { geral: "Diagnóstico digital completo", site: "Site profissional", cardapio: "Cardápio / catálogo online", ecommerce: "E-commerce / pedidos online", google: "Presença no Google", estoque: "Controle de estoque digital", crm: "CRM / cadastro de clientes", financeiro: "Gestão financeira" };\n\nconst segmentSuggestions = [
   "Academias", "Agências de publicidade", "Agências de turismo", "Advogados", "Agricultura",
   "Alimentação saudável", "Aluguel de equipamentos", "Autoescolas", "Autopeças", "Barbearias",
   "Bares", "Clínicas", "Clínicas médicas", "Clínicas odontológicas", "Contabilidades",
