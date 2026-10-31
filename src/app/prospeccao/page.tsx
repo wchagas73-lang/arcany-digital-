@@ -302,7 +302,7 @@ function getCompanyOpportunities(company: Company, check: WebsiteCheck | undefin
     items.push({ key: "internal", title: internalTitle, reason: description, next: "Fazer perguntas de diagnóstico antes de oferecer" });
   }
   if (focus !== "geral") {
-    const chosen = items.filter((item) => item.key === focus || (focus === "cardapio" && item.key === "catalogo") || (focus === "ecommerce" && item.key === "orders") || (focus === "site" && item.key === "site") || (focus === "google" && item.key === "google"));
+    const chosen = items.filter((item) => item.key === focus || (focus === "cardapio" && item.key === "catalogo") || (focus === "ecommerce" && item.key === "orders") || (focus === "site" && item.key === "site") || (focus === "google" && item.key === "google") || (["estoque", "crm", "financeiro"].includes(focus) && item.key === "internal"));
     if (chosen.length) return chosen.slice(0, 3);
   }
   return items.slice(0, 4);
