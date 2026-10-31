@@ -40,13 +40,21 @@
 - [ ] CRM e histórico de relacionamento.
 - [ ] Loja virtual, catálogo, carrinho e painel de pedidos.
 
-## Fase 7 — Demonstrações e IA
+## Fase 7 — Fábrica de soluções digitais
+- [x] Criar central inicial para selecionar soluções e preparar briefings.
+- [ ] Criar gerador de sites com modelos por segmento e pré-visualização.
+- [ ] Criar gerador de e-commerce com catálogo, carrinho e pedidos.
+- [ ] Criar módulos operacionais reutilizáveis: estoque, CRM, financeiro e dashboards.
+- [ ] Conectar os projetos a banco de dados, autenticação e permissões por cliente.
+- [ ] Integrar pagamentos, entrega e canais de atendimento conforme cada projeto.
+
+## Fase 8 — Demonstrações e IA
 - [ ] Modelos de sites por segmento.
 - [ ] Geração de demonstrações com dados fornecidos ou verificados.
 - [ ] Integração com provedor de IA via variáveis de ambiente seguras.
 - [ ] Revisão humana antes de publicar ou enviar ao cliente.
 
-## Fase 8 — Qualidade e escala
+## Fase 9 — Qualidade e escala
 - [ ] Testes automatizados.
 - [ ] Controle de uso, custos e limites das APIs.
 - [ ] Logs, monitoramento e backups.
