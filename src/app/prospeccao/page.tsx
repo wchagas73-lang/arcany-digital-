@@ -36,6 +36,8 @@ export default function ProspeccaoPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [totalFound, setTotalFound] = useState(0);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [websiteChecks, setWebsiteChecks] = useState<Record<string, WebsiteCheck>>({});
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [verificationErrors, setVerificationErrors] = useState<Record<string, string>>({});
@@ -66,6 +68,7 @@ export default function ProspeccaoPage() {
 
       setResults(data.results ?? []);
       setTotalFound(data.totalFound ?? 0);
+      setNextPageToken(data.nextPageToken ?? null);
       setSearched(true);
       setMessage(
         data.totalShown > 0
@@ -78,6 +81,32 @@ export default function ProspeccaoPage() {
       setMessage(error instanceof Error ? error.message : "Erro inesperado na pesquisa.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadMore() {
+    if (!nextPageToken || loadingMore) return;
+    setLoadingMore(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/prospeccao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city, state, segment, status, focus, pageToken: nextPageToken }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível carregar mais empresas.");
+      setResults((current) => {
+        const known = new Set(current.map((company) => company.id || company.name));
+        return [...current, ...(data.results ?? []).filter((company: Company) => !known.has(company.id || company.name))];
+      });
+      setTotalFound((current) => current + (data.totalFound ?? 0));
+      setNextPageToken(data.nextPageToken ?? null);
+      setMessage(data.results?.length ? "Mais empresas foram adicionadas à sua lista." : "Não há novas empresas nesta página.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erro ao carregar mais empresas.");
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -111,6 +140,9 @@ export default function ProspeccaoPage() {
     setSearched(false);
     setMessage("");
     setTotalFound(0);
+    setNextPageToken(null);
+    setWebsiteChecks({});
+    setVerificationErrors({});
   }
 
   return (
@@ -261,6 +293,8 @@ export default function ProspeccaoPage() {
               ))}
             </div>
           )}
+
+          {searched && nextPageToken && <div style={{ display: "flex", justifyContent: "center", padding: "0 18px 18px" }}><button className="secondary-button" onClick={loadMore} disabled={loadingMore}>{loadingMore ? <Loader2 size={14} className="spin" /> : <Search size={14} />} {loadingMore ? "Carregando..." : "Carregar mais empresas"}</button></div>}
 
           {searched && results.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={19} /></div><div className="empty-title">Nenhuma empresa para exibir</div><p className="empty-copy">Tente ampliar o segmento ou alterar a localização e faça uma nova busca.</p></div>}
         </section>
