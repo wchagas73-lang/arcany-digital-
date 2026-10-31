@@ -60,7 +60,7 @@ function requestPinned(target: PublicTarget): Promise<{ status: number; headers:
       method: "GET",
       headers: { "User-Agent": "ArcanyDigitalPublicCheck/1.0", Accept: "text/html,application/xhtml+xml" },
       servername: url.protocol === "https:" ? url.hostname : undefined,
-      lookup: ((_hostname: string, options: { all?: boolean }, callback: (...args: any[]) => void) => {
+      lookup: ((_hostname: string, options: { all?: boolean }, callback: (error: NodeJS.ErrnoException | null, address: string | Array<{ address: string; family: number }>, family?: number) => void) => {
         if (options?.all) callback(null, [{ address, family }]);
         else callback(null, address, family);
       }) as never,
