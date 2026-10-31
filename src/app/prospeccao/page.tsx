@@ -153,7 +153,8 @@ export default function ProspeccaoPage() {
           <div className="panel-heading">
             <div>
               <div className="panel-title">Empresas encontradas</div>
-              <div className="panel-subtitle">{searched ? `${results.length} exibida(s) · ${totalFound} retornada(s) pelo Google` : "Os resultados da pesquisa aparecerão aqui."}</div>\n              {searched && <div style={{ color: "#b8adff", fontSize: 10, marginTop: 5 }}>Foco selecionado: {focusLabels[focus] ?? focusLabels.geral}</div>}
+              <div className="panel-subtitle">{searched ? `${results.length} exibida(s) · ${totalFound} retornada(s) pelo Google` : "Os resultados da pesquisa aparecerão aqui."}</div>
+              {searched && <div style={{ color: "#b8adff", fontSize: 10, marginTop: 5 }}>Foco selecionado: {focusLabels[focus] ?? focusLabels.geral}</div>}
             </div>
             <span className="coming-tag">Google Places</span>
           </div>
@@ -175,7 +176,15 @@ export default function ProspeccaoPage() {
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <h3 style={{ margin: 0, color: "#f3f6fb", fontSize: 13, fontWeight: 650 }}>{company.name}</h3>
                     <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 11, lineHeight: 1.5 }}>{company.address}</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 9, color: "#aeb9ca", fontSize: 10 }}>\n                      {company.googleProfileFound && <span style={signalPill}>Perfil localizado no Google</span>}\n                      {company.websiteListed && <span style={signalPill}>Site listado</span>}\n                      {!company.websiteListed && <span style={signalWarning}>Site não listado (confirmar)</span>}\n                      <span style={signalPill}>Cardápio: investigar</span>\n                      <span style={signalPill}>E-commerce: investigar</span>\n                      <span style={signalPill}>Estoque / CRM / financeiro: confirmar com a empresa</span>\n                    </div>\n                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 9, color: "#aeb9ca", fontSize: 11 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 9, color: "#aeb9ca", fontSize: 10 }}>
+                      {company.googleProfileFound && <span style={signalPill}>Perfil localizado no Google</span>}
+                      {company.websiteListed && <span style={signalPill}>Site listado</span>}
+                      {!company.websiteListed && <span style={signalWarning}>Site não listado (confirmar)</span>}
+                      <span style={signalPill}>Cardápio: investigar</span>
+                      <span style={signalPill}>E-commerce: investigar</span>
+                      <span style={signalPill}>Estoque / CRM / financeiro: confirmar com a empresa</span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 9, color: "#aeb9ca", fontSize: 11 }}>
                       {company.rating !== null && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Star size={12} /> {company.rating.toFixed(1)} ({company.reviews})</span>}
                       {company.phone && <a href={`tel:${company.phone}`} style={linkStyle}><Phone size={12} /> {company.phone}</a>}
                       {!company.website && <span style={{ color: "#e9bd72" }}>Sem site listado no Google</span>}
@@ -202,7 +211,9 @@ export default function ProspeccaoPage() {
   );
 }
 
-const focusLabels: Record<string, string> = { geral: "Diagnóstico digital completo", site: "Site profissional", cardapio: "Cardápio / catálogo online", ecommerce: "E-commerce / pedidos online", google: "Presença no Google", estoque: "Controle de estoque digital", crm: "CRM / cadastro de clientes", financeiro: "Gestão financeira" };\n\nconst segmentSuggestions = [
+const focusLabels: Record<string, string> = { geral: "Diagnóstico digital completo", site: "Site profissional", cardapio: "Cardápio / catálogo online", ecommerce: "E-commerce / pedidos online", google: "Presença no Google", estoque: "Controle de estoque digital", crm: "CRM / cadastro de clientes", financeiro: "Gestão financeira" };
+
+const segmentSuggestions = [
   "Academias", "Agências de publicidade", "Agências de turismo", "Advogados", "Agricultura",
   "Alimentação saudável", "Aluguel de equipamentos", "Autoescolas", "Autopeças", "Barbearias",
   "Bares", "Clínicas", "Clínicas médicas", "Clínicas odontológicas", "Contabilidades",
@@ -244,4 +255,6 @@ const companyCardStyle = {
   borderRadius: 10,
   background: "rgba(255,255,255,.015)",
 };
-const linkStyle = { display: "inline-flex", alignItems: "center", gap: 5, color: "#b8adff", fontSize: 11, textDecoration: "none" };\nconst signalPill = { border: "1px solid rgba(139,124,255,.25)", background: "rgba(139,124,255,.08)", color: "#c9c1ff", borderRadius: 20, padding: "4px 7px" };\nconst signalWarning = { border: "1px solid rgba(233,189,114,.3)", background: "rgba(233,189,114,.08)", color: "#e9bd72", borderRadius: 20, padding: "4px 7px" };
+const linkStyle = { display: "inline-flex", alignItems: "center", gap: 5, color: "#b8adff", fontSize: 11, textDecoration: "none" };
+const signalPill = { border: "1px solid rgba(139,124,255,.25)", background: "rgba(139,124,255,.08)", color: "#c9c1ff", borderRadius: 20, padding: "4px 7px" };
+const signalWarning = { border: "1px solid rgba(233,189,114,.3)", background: "rgba(233,189,114,.08)", color: "#e9bd72", borderRadius: 20, padding: "4px 7px" };
