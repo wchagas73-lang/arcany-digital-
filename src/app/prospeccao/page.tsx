@@ -162,6 +162,19 @@ export default function ProspeccaoPage() {
                 <option value="com-site">Empresas com site listado</option>
               </select>
             </label>
+            <label style={labelStyle}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Sparkles size={13} /> Foco comercial</span>
+              <select value={focus} onChange={(e) => setFocus(e.target.value)} style={fieldStyle}>
+                <option value="geral">Diagnóstico digital completo</option>
+                <option value="site">Site profissional</option>
+                <option value="cardapio">Cardápio / catálogo online</option>
+                <option value="ecommerce">E-commerce / pedidos online</option>
+                <option value="google">Presença no Google</option>
+                <option value="estoque">Controle de estoque digital</option>
+                <option value="crm">CRM / cadastro de clientes</option>
+                <option value="financeiro">Gestão financeira</option>
+              </select>
+            </label>
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginTop: 19 }}>
@@ -221,6 +234,22 @@ export default function ProspeccaoPage() {
                     {company.mapsUrl && <a href={company.mapsUrl} target="_blank" rel="noreferrer" style={linkStyle}>Google Maps <ExternalLink size={12} /></a>}
                   </div>
                 </article>
+                <section style={{ border: "1px solid rgba(139,124,255,.24)", borderRadius: 10, padding: 12, background: "rgba(139,124,255,.045)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <strong style={{ fontSize: 11, color: "#e7e3ff" }}>Oportunidades comerciais sugeridas</strong>
+                    <span style={{ fontSize: 9, color: "var(--muted)" }}>Hipóteses para validar com o responsável</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 8, marginTop: 10 }}>
+                    {getCompanyOpportunities(company, websiteChecks[company.id], focus).map((item) => (
+                      <div key={item.title} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 10, background: "rgba(10,16,27,.55)" }}>
+                        <div style={{ fontSize: 11, color: "#f3f6fb", fontWeight: 650 }}>{item.title}</div>
+                        <p style={{ margin: "5px 0 0", fontSize: 10, color: "var(--muted)", lineHeight: 1.5 }}>{item.reason}</p>
+                        <div style={{ marginTop: 7, fontSize: 9, color: "#e9bd72" }}>Próximo passo: {item.next}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <a href={`/solucoes?empresa=${encodeURIComponent(company.name)}&segmento=${encodeURIComponent(segment)}&foco=${encodeURIComponent(focus)}`} style={{ ...linkStyle, marginTop: 10 }}>Preparar uma solução para esta empresa <ExternalLink size={11} /></a>
+                </section>
                 {verificationErrors[company.id] && <div role="alert" style={{ border: "1px solid rgba(233,189,114,.3)", borderRadius: 9, padding: 10, color: "#e9bd72", fontSize: 11 }}>{verificationErrors[company.id]}</div>}
                 {websiteChecks[company.id] && <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 13, background: "rgba(139,124,255,.045)" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 10 }}><strong style={{ fontSize: 11, color: "#e7e3ff" }}>Análise das páginas públicas</strong><span style={{ fontSize: 10, color: "var(--muted)" }}>Verificado em {new Date(websiteChecks[company.id].checkedAt).toLocaleString("pt-BR")}</span></div>
@@ -243,6 +272,44 @@ export default function ProspeccaoPage() {
       </div>
     </AppShell>
   );
+}
+
+function getCompanyOpportunities(company: Company, check: WebsiteCheck | undefined, focus: string) {
+  const items: Array<{ title: string; reason: string; next: string; key: string }> = [];
+  const foodBusiness = /restaurante|bar|lanch|pizz|padaria|marmit|açoug|acoug|hortifruti|mercado|confeit|cafeteria|delivery/i.test(segmentFromCompany(company));
+  if (!company.websiteListed) {
+    items.push({ key: "site", title: "Site profissional", reason: "O Google não apresentou um endereço de site para este perfil. Isso pode indicar uma oportunidade, mas precisa ser confirmado.", next: "Perguntar se a empresa já possui site", });
+  }
+  if (check) {
+    const hasMenu = check.findings.some((f) => ["cardapio", "catalogo"].includes(f.key) && f.status === "sinal_encontrado");
+    const hasOrders = check.findings.some((f) => ["ecommerce", "carrinho", "pedidos"].includes(f.key) && f.status === "sinal_encontrado");
+    if (!hasMenu) items.push({ key: "catalogo", title: foodBusiness ? "Cardápio ou catálogo digital" : "Catálogo digital", reason: "Não apareceu sinal nas páginas públicas consultadas; pode existir em outra página ou canal.", next: "Confirmar como apresenta produtos e serviços" });
+    if (!hasOrders) items.push({ key: "orders", title: "Pedidos e vendas online", reason: "Não foi identificado fluxo de compra nas páginas analisadas. É uma possibilidade a investigar, não uma ausência comprovada.", next: "Perguntar como recebe pedidos hoje" });
+  } else if (company.website) {
+    items.push({ key: "scan", title: "Análise do site", reason: "O negócio tem site listado, mas ainda não foi feita a leitura das páginas públicas.", next: "Usar o botão Analisar site" });
+  }
+  if (company.rating !== null && (company.rating < 4.2 || company.reviews < 10)) {
+    items.push({ key: "google", title: "Reputação no Google", reason: `Perfil com nota ${company.rating.toFixed(1)} e ${company.reviews} avaliação(ões). Pode valer uma estratégia de melhoria de presença e relacionamento.`, next: "Avaliar atendimento e pedir avaliações reais, sem incentivos indevidos" });
+  } else if (company.rating === null) {
+    items.push({ key: "google", title: "Perfil e reputação no Google", reason: "A consulta não retornou nota. Vale revisar a apresentação pública e confirmar os dados com o responsável.", next: "Conferir perfil, fotos, horários e avaliações" });
+  }
+  if (!company.phone) {
+    items.push({ key: "contact", title: "Canal de contato", reason: "A consulta não retornou telefone público para este negócio.", next: "Localizar canal oficial de contato" });
+  }
+  const internalTitle = focus === "estoque" ? "Controle de estoque" : focus === "crm" ? "CRM e clientes" : focus === "financeiro" ? "Gestão financeira" : "Processos internos";
+  if (["estoque", "crm", "financeiro", "geral"].includes(focus)) {
+    const description = focus === "estoque" ? "Não é possível descobrir pelo perfil público se a empresa controla estoque, lotes ou validade." : focus === "crm" ? "O perfil público não revela como a empresa registra clientes e histórico de compras." : focus === "financeiro" ? "O perfil público não revela controles financeiros, contas a pagar ou fluxo de caixa." : "Sistemas de estoque, CRM e financeiro não são visíveis na consulta pública.";
+    items.push({ key: "internal", title: internalTitle, reason: description, next: "Fazer perguntas de diagnóstico antes de oferecer" });
+  }
+  if (focus !== "geral") {
+    const chosen = items.filter((item) => item.key === focus || (focus === "cardapio" && item.key === "catalogo") || (focus === "ecommerce" && item.key === "orders") || (focus === "site" && item.key === "site") || (focus === "google" && item.key === "google"));
+    if (chosen.length) return chosen.slice(0, 3);
+  }
+  return items.slice(0, 4);
+}
+
+function segmentFromCompany(company: Company) {
+  return [company.name, ...company.types].join(" ");
 }
 
 const focusLabels: Record<string, string> = { geral: "Diagnóstico digital completo", site: "Site profissional", cardapio: "Cardápio / catálogo online", ecommerce: "E-commerce / pedidos online", google: "Presença no Google", estoque: "Controle de estoque digital", crm: "CRM / cadastro de clientes", financeiro: "Gestão financeira" };
