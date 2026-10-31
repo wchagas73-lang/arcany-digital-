@@ -20,6 +20,10 @@ export default function StockPage() {
   const [price, setPrice] = useState("0");
   const [minimum, setMinimum] = useState("0");
   const [quantity, setQuantity] = useState("0");
+  const [movementProduct, setMovementProduct] = useState("");
+  const [movementType, setMovementType] = useState("entrada");
+  const [movementQuantity, setMovementQuantity] = useState("");
+  const [movementNotes, setMovementNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [configured, setConfigured] = useState(true);
@@ -68,6 +72,28 @@ export default function StockPage() {
     finally { setBusy(false); }
   }
 
+  async function registerMovement(event: FormEvent) {
+    event.preventDefault();
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const product = rows.find(r => r.id === movementProduct);
+    const amount = Number(movementQuantity.replace(",", "."));
+    if (!product || !Number.isFinite(amount) || amount <= 0) { setMessage("Selecione um produto e informe uma quantidade válida."); return; }
+    if (["saida", "perda"].includes(movementType) && amount > product.balance) { setMessage("A quantidade não pode ser maior que o saldo disponível."); return; }
+    setBusy(true); setMessage("");
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Faça login antes de movimentar o estoque.");
+      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      if (memberError) throw memberError;
+      if (!membership) throw new Error("Organização não encontrada.");
+      const { error } = await supabase.from("stock_movements").insert({ organization_id: membership.organization_id, product_id: product.id, movement_type: movementType, quantity: amount, notes: movementNotes.trim() || null, created_by: userData.user.id });
+      if (error) throw error;
+      setMovementQuantity(""); setMovementNotes(""); await load();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível registrar a movimentação."); }
+    finally { setBusy(false); }
+  }
+
   const visible = rows.filter(r => [r.name, r.sku || "", r.category || ""].join(" ").toLowerCase().includes(query.toLowerCase()));
   const low = rows.filter(r => r.balance <= Number(r.min_stock));
   return <AppShell><div className="content">
@@ -90,6 +116,16 @@ export default function StockPage() {
         <button disabled={busy || !configured} className="action-button" style={{ justifyContent: "center" }}><PackagePlus size={15}/>{busy ? "Salvando..." : "Salvar produto"}</button>
       </form>
       {message && <p role="status" style={{ color: "#f1c879", fontSize: 12, marginTop: 12 }}>{message}</p>}
+    </section>
+    <section className="panel" style={{ marginTop: 16, padding: 16 }}>
+      <div className="panel-title">Registrar movimentação</div><div className="panel-subtitle">Entradas, saídas, perdas e devoluções atualizam o saldo automaticamente.</div>
+      <form onSubmit={registerMovement} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(145px,1fr))", gap: 9, marginTop: 12 }}>
+        <select required value={movementProduct} onChange={e => setMovementProduct(e.target.value)} style={field}><option value="">Selecione o produto</option>{rows.map(p=><option key={p.id} value={p.id}>{p.name} — saldo {p.balance} {p.unit}</option>)}</select>
+        <select value={movementType} onChange={e => setMovementType(e.target.value)} style={field}><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="perda">Perda</option><option value="devolucao">Devolução</option></select>
+        <input required type="number" min="0.001" step="0.001" value={movementQuantity} onChange={e=>setMovementQuantity(e.target.value)} placeholder="Quantidade" style={field}/>
+        <input value={movementNotes} onChange={e=>setMovementNotes(e.target.value)} placeholder="Observação (opcional)" style={field}/>
+        <button className="action-button" disabled={busy||!configured||!rows.length} style={{justifyContent:"center"}}>Registrar movimentação</button>
+      </form>
     </section>
     <section className="panel" style={{ marginTop: 16 }}>
       <div className="panel-heading" style={{ flexWrap: "wrap" }}><div><div className="panel-title">Produtos</div><div className="panel-subtitle">{visible.length} registro(s)</div></div><button type="button" className="action-button" onClick={() => void load()}><RefreshCw size={14}/> Atualizar</button></div>
