@@ -23,6 +23,8 @@ type Company = {
   financialSystemStatus?: string;
 };
 
+type WebsiteCheck = { checkedUrl: string; checkedAt: string; findings: Array<{ key: string; label: string; status: string; evidence: Array<{ url: string; text: string }> }>; note: string };
+
 export default function ProspeccaoPage() {
   const [city, setCity] = useState("Juiz de Fora");
   const [state, setState] = useState("MG");
@@ -34,6 +36,9 @@ export default function ProspeccaoPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [totalFound, setTotalFound] = useState(0);
+  const [websiteChecks, setWebsiteChecks] = useState<Record<string, WebsiteCheck>>({});
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verificationErrors, setVerificationErrors] = useState<Record<string, string>>({});
 
   async function handleSearch() {
     if (!city.trim() || !state.trim() || !segment.trim()) {
@@ -73,6 +78,26 @@ export default function ProspeccaoPage() {
       setMessage(error instanceof Error ? error.message : "Erro inesperado na pesquisa.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function verifyWebsite(company: Company) {
+    if (!company.website) return;
+    setVerifyingId(company.id);
+    setVerificationErrors((current) => ({ ...current, [company.id]: "" }));
+    try {
+      const response = await fetch("/api/prospeccao/verificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ website: company.website }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível analisar este site.");
+      setWebsiteChecks((current) => ({ ...current, [company.id]: data }));
+    } catch (error) {
+      setVerificationErrors((current) => ({ ...current, [company.id]: error instanceof Error ? error.message : "Erro ao analisar o site." }));
+    } finally {
+      setVerifyingId(null);
     }
   }
 
@@ -172,7 +197,8 @@ export default function ProspeccaoPage() {
           {searched && results.length > 0 && (
             <div style={{ display: "grid", gap: 10, padding: "0 18px 18px" }}>
               {results.map((company) => (
-                <article key={company.id || company.name} style={companyCardStyle}>
+                <div key={company.id || company.name} style={{ display: "grid", gap: 8 }}>
+                <article style={companyCardStyle}>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <h3 style={{ margin: 0, color: "#f3f6fb", fontSize: 13, fontWeight: 650 }}>{company.name}</h3>
                     <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 11, lineHeight: 1.5 }}>{company.address}</p>
@@ -191,10 +217,17 @@ export default function ProspeccaoPage() {
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 9 }}>
-                    {company.website && <a href={company.website} target="_blank" rel="noreferrer" style={linkStyle}>Site <ExternalLink size={12} /></a>}
+                    {company.website && <><a href={company.website} target="_blank" rel="noreferrer" style={linkStyle}>Site <ExternalLink size={12} /></a><button type="button" onClick={() => verifyWebsite(company)} disabled={verifyingId === company.id} className="secondary-button" style={{ fontSize: 10, padding: "7px 9px" }}>{verifyingId === company.id ? <Loader2 size={12} className="spin" /> : <Search size={12} />} Analisar site</button></>}
                     {company.mapsUrl && <a href={company.mapsUrl} target="_blank" rel="noreferrer" style={linkStyle}>Google Maps <ExternalLink size={12} /></a>}
                   </div>
                 </article>
+                {verificationErrors[company.id] && <div role="alert" style={{ border: "1px solid rgba(233,189,114,.3)", borderRadius: 9, padding: 10, color: "#e9bd72", fontSize: 11 }}>{verificationErrors[company.id]}</div>}
+                {websiteChecks[company.id] && <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 13, background: "rgba(139,124,255,.045)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 10 }}><strong style={{ fontSize: 11, color: "#e7e3ff" }}>Sinais encontrados na página pública</strong><span style={{ fontSize: 10, color: "var(--muted)" }}>Verificado em {new Date(websiteChecks[company.id].checkedAt).toLocaleString("pt-BR")}</span></div>
+                  <div style={{ display: "grid", gap: 8 }}>{websiteChecks[company.id].findings.map((finding) => <div key={finding.key} style={{ display: "grid", gap: 4, fontSize: 11 }}><span style={{ color: finding.status === "sinal_encontrado" ? "#a9dfbd" : "#e9bd72" }}>{finding.status === "sinal_encontrado" ? "Possível sinal: " : "Não identificado na página inicial: "}{finding.label}</span>{finding.evidence.map((item, index) => <a key={index} href={new URL(item.url, websiteChecks[company.id].checkedUrl).toString()} target="_blank" rel="noreferrer" style={linkStyle}>{item.text || item.url} <ExternalLink size={10} /></a>)}</div>)}</div>
+                  <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.5, margin: "10px 0 0" }}>{websiteChecks[company.id].note}</p>
+                </div>}
+                </div>
               ))}
             </div>
           )}
