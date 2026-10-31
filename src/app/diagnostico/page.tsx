@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { AlertCircle, CheckCircle2, ClipboardList, RotateCcw, Search, ShieldQuestion } from "lucide-react";
+import { AlertCircle, ClipboardList, RotateCcw, Search, ShieldQuestion } from "lucide-react";
 
 type Status = "investigar" | "confirmado" | "nao-identificado" | "nao-se-aplica";
 type Item = { id: string; name: string; detail: string; solution: string; status: Status; note: string };
