@@ -23,7 +23,8 @@
 - [x] Exibir sinais públicos encontrados e itens que ainda precisam de investigação.
 - [x] Analisar a página inicial pública do site e procurar sinais de cardápio, catálogo, e-commerce, carrinho e pedidos.
 - [x] Exibir evidências encontradas, endereço consultado e data da verificação, sem tratar ausência de sinal como prova.
-- [ ] Ampliar a análise para páginas internas públicas (menu, produtos, loja e pedidos), registrando evidências e data.
+- [x] Ampliar a análise para até quatro páginas internas públicas sugeridas pelos links do próprio site.
+- [x] Exibir quantidade de páginas consultadas, evidências, endereço e data da verificação.
 - [ ] Criar checklist de diagnóstico por empresa e salvar o resultado no banco.
 - [ ] Deduplicar empresas e permitir revisão manual.
 
