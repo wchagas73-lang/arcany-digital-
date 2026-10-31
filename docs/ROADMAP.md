@@ -20,18 +20,33 @@
 - [ ] Analisar presença digital sem inventar informações.
 - [ ] Deduplicar empresas e permitir revisão manual.
 
-## Fase 4 — CRM
+## Fase 4 — Diagnóstico de oportunidades
+- [x] Criar primeira tela para registrar necessidades por empresa.
+- [x] Separar problemas confirmados, pontos a investigar e itens não identificados.
+- [ ] Salvar diagnóstico vinculado à empresa no banco de dados.
+- [ ] Gerar recomendações de soluções com base nos problemas confirmados.
+
+## Fase 5 — CRM
 - [ ] Pipeline de vendas configurável.
 - [ ] Tarefas, lembretes e histórico de contatos.
 - [ ] Indicadores calculados a partir dos dados reais.
 
-## Fase 5 — Demonstrações e IA
+## Fase 6 — Operação e gestão dos clientes
+- [ ] Cadastro de produtos, fornecedores e movimentações de estoque.
+- [ ] Importação de XML de NF-e com conferência dos itens antes da entrada.
+- [ ] Controle de lotes, validade, perdas e estoque mínimo.
+- [ ] Registrar vendas e baixar estoque automaticamente.
+- [ ] Fluxo de caixa, contas a pagar e receber.
+- [ ] CRM e histórico de relacionamento.
+- [ ] Loja virtual, catálogo, carrinho e painel de pedidos.
+
+## Fase 7 — Demonstrações e IA
 - [ ] Modelos de sites por segmento.
 - [ ] Geração de demonstrações com dados fornecidos ou verificados.
 - [ ] Integração com provedor de IA via variáveis de ambiente seguras.
 - [ ] Revisão humana antes de publicar ou enviar ao cliente.
 
-## Fase 6 — Qualidade e escala
+## Fase 8 — Qualidade e escala
 - [ ] Testes automatizados.
 - [ ] Controle de uso, custos e limites das APIs.
 - [ ] Logs, monitoramento e backups.
