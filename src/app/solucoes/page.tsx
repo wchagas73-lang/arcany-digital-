@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus, Minus, Trash2 } from "lucide-react";
 
@@ -41,6 +41,28 @@ export default function SolucoesPage() {
   const [newProductDescription, setNewProductDescription] = useState("");
   const [newProductPrice, setNewProductPrice] = useState("");
   const [newProductImage, setNewProductImage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const companyName = params.get("empresa");
+    const companySegment = params.get("segmento");
+    const focus = params.get("foco");
+    if (companyName) setCompany(companyName);
+    if (companySegment) setSegment(companySegment);
+    if (focus) {
+      const solutionByFocus: Record<string, string> = {
+        site: "site",
+        cardapio: "catalogo",
+        ecommerce: "ecommerce",
+        estoque: "estoque",
+        crm: "crm",
+        financeiro: "financeiro",
+        google: "site",
+      };
+      if (solutionByFocus[focus]) setSelected(solutionByFocus[focus]);
+      setObjective("Projeto sugerido a partir da prospecção da Arcany. Validar as necessidades diretamente com o responsável pela empresa.");
+    }
+  }, []);
 
   const solution = solutions.find((item) => item.id === selected) ?? solutions[0];
   const canPreview = ["site", "ecommerce", "catalogo"].includes(selected);
