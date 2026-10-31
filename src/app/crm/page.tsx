@@ -7,13 +7,14 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ArrowRight, CalendarClock, MessageCircle, Search, Users, Cloud, HardDrive } from "lucide-react";
 
 type Stage="novo"|"contato"|"proposta"|"negociacao"|"cliente"|"perdido";
+type DbLead={id:string;company_name:string;contact_name:string|null;phone:string|null;segment:string|null;interest:string|null;stage:Stage;follow_up_at:string|null;notes:string|null};
 type Lead={id:string;company:string;contact:string;phone:string;segment:string;interest:string;stage:Stage;followUp:string;notes:string};
 const STORAGE_KEY="arcany-leads-v1";
 const columns:{id:Stage;title:string;hint:string}[]=[
 {id:"novo",title:"Novos leads",hint:"Ainda não contatados"},{id:"contato",title:"Em contato",hint:"Primeira conversa feita"},{id:"proposta",title:"Proposta enviada",hint:"Aguardando resposta"},{id:"negociacao",title:"Negociação",hint:"Ajustando a solução"},{id:"cliente",title:"Fechados",hint:"Clientes conquistados"},{id:"perdido",title:"Não avançaram",hint:"Oportunidades encerradas"}];
 
 export default function CrmPage(){
- const [leads,setLeads]=useState<Lead[]>([]);const [ready,setReady]=useState(false);const [query,setQuery]=useState("");const [cloud,setCloud]=useState(false);const [org,setOrg]=useState<string|null>(null);const [notice,setNotice]=useState("");
+ const [leads,setLeads]=useState<Lead[]>([]);const [ready,setReady]=useState(false);const [query,setQuery]=useState("");const [cloud,setCloud]=useState(false);const [notice,setNotice]=useState("");
  const load=useCallback(async()=>{
   const local=(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]") as Lead[];}catch{return [];}})();
   const db=getSupabaseBrowserClient();
@@ -22,16 +23,16 @@ export default function CrmPage(){
   if(!user.user){setLeads(local);setNotice("Entre na sua conta para sincronizar o CRM na nuvem.");setReady(true);return;}
   const {data:membership,error:memberError}=await db.from("organization_members").select("organization_id").eq("user_id",user.user.id).limit(1).maybeSingle();
   if(memberError||!membership){setLeads(local);setNotice(memberError?.message||"Organização não encontrada. Verifique seu cadastro.");setReady(true);return;}
-  setOrg(membership.organization_id);
+
   const {data:rows,error}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});
   if(error){setLeads(local);setNotice("Não foi possível ler os leads na nuvem: "+error.message);setReady(true);return;}
   if((rows||[]).length===0&&local.length){
    const payload=local.map(l=>({organization_id:membership.organization_id,company_name:l.company,contact_name:l.contact||null,phone:l.phone||null,segment:l.segment||null,interest:l.interest||null,stage:l.stage,follow_up_at:l.followUp||null,notes:l.notes||null}));
    const {error:insertError}=await db.from("leads").insert(payload);
-   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});setLeads((again||[]).map((l:any)=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));setCloud(true);setNotice("Leads locais importados para a nuvem.");setReady(true);return;}
+   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});setLeads(((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));setCloud(true);setNotice("Leads locais importados para a nuvem.");setReady(true);return;}
    setNotice("Falha ao importar dados locais: "+insertError.message);
   }
-  setLeads((rows||[]).map((l:any)=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));
+  setLeads(((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));
   setCloud(true);setReady(true);
  },[]);
  useEffect(()=>{void load();},[load]);
