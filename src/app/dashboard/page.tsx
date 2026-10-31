@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { ArrowUpRight, Building2, ContactRound, Search, Sparkles, Target, Workflow } from "lucide-react";
+import { ArrowUpRight, Building2, ContactRound, Search, Sparkles, Target, Workflow, Globe, Package, Wallet, ShoppingBag } from "lucide-react";
 
 type Lead = { stage?: string };
 type Company = { id: string };
 const modules = [
   { title: "Prospecção inteligente", detail: "Encontre negócios por cidade e segmento.", icon: Search, tag: "Pesquisar empresas", href: "/prospeccao" },
   { title: "Análise de presença digital", detail: "Identifique sites, avaliações e canais online.", icon: ArrowUpRight, tag: "Fazer diagnóstico", href: "/diagnostico" },
-  { title: "CRM comercial", detail: "Organize contatos, etapas e acompanhamentos.", icon: ContactRound, tag: "Abrir pipeline", href: "/crm" }
+  { title: "CRM comercial", detail: "Organize contatos, etapas e acompanhamentos.", icon: ContactRound, tag: "Abrir pipeline", href: "/crm" },
+  { title: "Criador de projetos", detail: "Monte sites, cardápios e vitrines digitais.", icon: Globe, tag: "Criar projeto", href: "/projetos" },
+  { title: "Controle de estoque", detail: "Cadastre produtos e acompanhe movimentações.", icon: Package, tag: "Gerenciar estoque", href: "/estoque" },
+  { title: "Financeiro", detail: "Registre receitas, despesas e vencimentos.", icon: Wallet, tag: "Abrir financeiro", href: "/financeiro" }
 ];
 
 export default function DashboardPage() {
