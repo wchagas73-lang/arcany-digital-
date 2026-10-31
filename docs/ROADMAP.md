@@ -17,7 +17,12 @@
 - [ ] Definir fontes e APIs permitidas para pesquisa de empresas.
 - [ ] Filtros por cidade, estado e segmento.
 - [ ] Coletar e registrar origem e data dos dados.
-- [ ] Analisar presença digital sem inventar informações.
+- [x] Pesquisar empresas por cidade, estado e segmento usando Google Places.
+- [x] Filtrar empresas com ou sem site listado no perfil do Google.
+- [x] Selecionar foco comercial: site, cardápio, e-commerce, Google, estoque, CRM ou financeiro.
+- [x] Exibir sinais públicos encontrados e itens que ainda precisam de investigação.
+- [ ] Consultar páginas públicas para verificar cardápios, catálogos e lojas virtuais, registrando evidências e data.
+- [ ] Criar checklist de diagnóstico por empresa e salvar o resultado no banco.
 - [ ] Deduplicar empresas e permitir revisão manual.
 
 ## Fase 4 — Diagnóstico de oportunidades
@@ -26,12 +31,12 @@
 - [ ] Salvar diagnóstico vinculado à empresa no banco de dados.
 - [ ] Gerar recomendações de soluções com base nos problemas confirmados.
 
-## Fase 5 — CRM
+## Fase 5 — Presença e publicação no Google\n- [ ] Consultar e orientar a criação ou melhoria do Perfil da Empresa no Google.\n- [ ] Integrar a API do Perfil da Empresa com OAuth e autorização explícita do proprietário.\n- [ ] Preparar fluxo de atualização de informações, fotos, horários e categorias.\n- [ ] Implementar publicação somente após autorização e aprovação do responsável; acompanhar verificação do Google.\n\n## Fase 6 — CRM
 - [ ] Pipeline de vendas configurável.
 - [ ] Tarefas, lembretes e histórico de contatos.
 - [ ] Indicadores calculados a partir dos dados reais.
 
-## Fase 6 — Operação e gestão dos clientes
+## Fase 7 — Operação e gestão dos clientes
 - [ ] Cadastro de produtos, fornecedores e movimentações de estoque.
 - [ ] Importação de XML de NF-e com conferência dos itens antes da entrada.
 - [ ] Controle de lotes, validade, perdas e estoque mínimo.
@@ -40,7 +45,7 @@
 - [ ] CRM e histórico de relacionamento.
 - [ ] Loja virtual, catálogo, carrinho e painel de pedidos.
 
-## Fase 7 — Fábrica de soluções digitais
+## Fase 8 — Fábrica de soluções digitais
 - [x] Criar central inicial para selecionar soluções e preparar briefings.
 - [ ] Criar gerador de sites com modelos por segmento e pré-visualização.
 - [ ] Criar gerador de e-commerce com catálogo, carrinho e pedidos.
@@ -48,13 +53,13 @@
 - [ ] Conectar os projetos a banco de dados, autenticação e permissões por cliente.
 - [ ] Integrar pagamentos, entrega e canais de atendimento conforme cada projeto.
 
-## Fase 8 — Demonstrações e IA
+## Fase 9 — Demonstrações e IA
 - [ ] Modelos de sites por segmento.
 - [ ] Geração de demonstrações com dados fornecidos ou verificados.
 - [ ] Integração com provedor de IA via variáveis de ambiente seguras.
 - [ ] Revisão humana antes de publicar ou enviar ao cliente.
 
-## Fase 9 — Qualidade e escala
+## Fase 10 — Qualidade e escala
 - [ ] Testes automatizados.
 - [ ] Controle de uso, custos e limites das APIs.
 - [ ] Logs, monitoramento e backups.
