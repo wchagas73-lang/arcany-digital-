@@ -106,7 +106,19 @@ export default function ProspeccaoPage() {
             </label>
             <label style={labelStyle}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Building2 size={13} /> Segmento / nicho</span>
-              <input value={segment} onChange={(e) => setSegment(e.target.value)} placeholder="Ex.: restaurantes, pet shops, clínicas..." style={fieldStyle} />
+              <input
+                value={segment}
+                onChange={(e) => setSegment(e.target.value)}
+                placeholder="Digite ou escolha qualquer nicho..."
+                list="arcany-segmentos"
+                style={fieldStyle}
+              />
+              <datalist id="arcany-segmentos">
+                {segmentSuggestions.map((item) => <option key={item} value={item} />)}
+              </datalist>
+              <span style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.5 }}>
+                Sugestões para agilizar: você também pode digitar um segmento que não esteja na lista.
+              </span>
             </label>
             <label style={labelStyle}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><SlidersHorizontal size={13} /> Presença de site</span>
@@ -180,6 +192,25 @@ export default function ProspeccaoPage() {
     </AppShell>
   );
 }
+
+const segmentSuggestions = [
+  "Academias", "Agências de publicidade", "Agências de turismo", "Advogados", "Agricultura",
+  "Alimentação saudável", "Aluguel de equipamentos", "Autoescolas", "Autopeças", "Barbearias",
+  "Bares", " clínicas", "Clínicas médicas", "Clínicas odontológicas", "Contabilidades",
+  "Cosméticos", "Construção civil", "Cursos profissionalizantes", "Distribuidoras",
+  "Escolas", "Eletricistas", "Eletrônicos", "Escritórios de arquitetura", "Farmácias",
+  "Fisioterapia", "Floriculturas", "Hotéis", "Imobiliárias", "Indústrias",
+  "Lojas de roupas", "Lojas de calçados", "Lojas de móveis", "Lojas de variedades",
+  "Materiais de construção", "Mercados", "Oficinas mecânicas", "Óticas", "Padarias",
+  "Pet shops", "Papelarias", "Perfumarias", "Prestadores de serviços", "Psicólogos",
+  "Restaurantes", "Salões de beleza", "Serviços de limpeza", "Supermercados",
+  "Transportadoras", "Veterinários", "Hortifrutis", "Açougues", "Confeitarias",
+  "Marmitarias", "Pizzarias", "Lanchonetes", "Assistência técnica", "Informática",
+  "Clínicas veterinárias", "Laboratórios", "Consultórios", "Fotógrafos", "Gráficas",
+  "Marcenarias", "Serralherias", "Vidraçarias", "Encanadores", "Empresas de eventos",
+  "Estúdios de tatuagem", "Lavanderias", "Estacionamentos", "Despachantes",
+  "Consultorias", "Contabilidade", "Logística", "Comércio atacadista", "Comércio varejista"
+];
 
 const labelStyle = { display: "grid", gap: 7, color: "#aeb9ca", fontSize: 11 };
 const fieldStyle = {
