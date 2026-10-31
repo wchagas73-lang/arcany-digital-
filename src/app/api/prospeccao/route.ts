@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { city?: string; state?: string; segment?: string; status?: string };
+  let body: { city?: string; state?: string; segment?: string; status?: string; pageToken?: string };
   try {
     body = await request.json();
   } catch {
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
   const state = String(body.state ?? "").trim().slice(0, 2).toUpperCase();
   const segment = String(body.segment ?? "").trim().slice(0, 100);
   const status = String(body.status ?? "todos");
+  const pageToken = typeof body.pageToken === "string" ? body.pageToken.slice(0, 1000) : "";
 
   if (!city || !state || !segment) {
     return NextResponse.json({ error: "Informe cidade, estado e segmento." }, { status: 400 });
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         textQuery: query,
         pageSize: 20,
+        ...(pageToken ? { pageToken } : {}),
         languageCode: "pt-BR",
         regionCode: "BR",
       }),
@@ -98,6 +100,7 @@ export async function POST(request: Request) {
       results: filtered,
       totalFound: places.length,
       totalShown: filtered.length,
+      nextPageToken: (data as PlacesTextSearchResponse & { nextPageToken?: string }).nextPageToken ?? null,
       query,
       source: "Google Places",
       note: "A busca localiza perfis públicos. Cardápio, e-commerce e sistemas internos não são confirmados por esta consulta."
