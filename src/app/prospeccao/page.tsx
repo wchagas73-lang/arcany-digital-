@@ -23,7 +23,7 @@ type Company = {
   financialSystemStatus?: string;
 };
 
-type WebsiteCheck = { checkedUrl: string; checkedAt: string; findings: Array<{ key: string; label: string; status: string; evidence: Array<{ url: string; text: string }> }>; note: string };
+type WebsiteCheck = { checkedUrl: string; checkedAt: string; pagesChecked?: string[]; findings: Array<{ key: string; label: string; status: string; evidence: Array<{ url: string; text: string }> }>; note: string };
 
 export default function ProspeccaoPage() {
   const [city, setCity] = useState("Juiz de Fora");
@@ -223,7 +223,8 @@ export default function ProspeccaoPage() {
                 </article>
                 {verificationErrors[company.id] && <div role="alert" style={{ border: "1px solid rgba(233,189,114,.3)", borderRadius: 9, padding: 10, color: "#e9bd72", fontSize: 11 }}>{verificationErrors[company.id]}</div>}
                 {websiteChecks[company.id] && <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 13, background: "rgba(139,124,255,.045)" }}>
-                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 10 }}><strong style={{ fontSize: 11, color: "#e7e3ff" }}>Sinais encontrados na página pública</strong><span style={{ fontSize: 10, color: "var(--muted)" }}>Verificado em {new Date(websiteChecks[company.id].checkedAt).toLocaleString("pt-BR")}</span></div>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginBottom: 10 }}><strong style={{ fontSize: 11, color: "#e7e3ff" }}>Análise das páginas públicas</strong><span style={{ fontSize: 10, color: "var(--muted)" }}>Verificado em {new Date(websiteChecks[company.id].checkedAt).toLocaleString("pt-BR")}</span></div>
+                  <p style={{ color: "var(--muted)", fontSize: 10, margin: "0 0 10px" }}>Páginas consultadas: {websiteChecks[company.id].pagesChecked?.length ?? 1}</p>
                   <div style={{ display: "grid", gap: 8 }}>{websiteChecks[company.id].findings.map((finding) => <div key={finding.key} style={{ display: "grid", gap: 4, fontSize: 11 }}><span style={{ color: finding.status === "sinal_encontrado" ? "#a9dfbd" : "#e9bd72" }}>{finding.status === "sinal_encontrado" ? "Possível sinal: " : "Não identificado na página inicial: "}{finding.label}</span>{finding.evidence.map((item, index) => <a key={index} href={new URL(item.url, websiteChecks[company.id].checkedUrl).toString()} target="_blank" rel="noreferrer" style={linkStyle}>{item.text || item.url} <ExternalLink size={10} /></a>)}</div>)}</div>
                   <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.5, margin: "10px 0 0" }}>{websiteChecks[company.id].note}</p>
                 </div>}
