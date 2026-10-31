@@ -17,7 +17,8 @@ export default function EmpresasPage() {
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState<string|null>(null);
   const [show,setShow]=useState(false);
-  const [query,setQuery]=useState("");\n  const [leadNames,setLeadNames]=useState<string[]>([]);
+  const [query,setQuery]=useState("");
+  const [leadNames,setLeadNames]=useState<string[]>([]);
   useEffect(()=>{try{const raw=localStorage.getItem(COMPANY_KEY);if(raw)setCompanies(JSON.parse(raw) as Company[]);const savedLeads=JSON.parse(localStorage.getItem(LEAD_KEY)||"[]") as Lead[];setLeadNames(savedLeads.map(l=>l.company.toLowerCase()));}catch{/* ignora dados locais inválidos */}setReady(true);},[]);
   useEffect(()=>{if(ready)localStorage.setItem(COMPANY_KEY,JSON.stringify(companies));},[companies,ready]);
   const visible=useMemo(()=>companies.filter(c=>[c.name,c.segment,c.city,c.phone].join(" ").toLowerCase().includes(query.toLowerCase())),[companies,query]);
