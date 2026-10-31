@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity, Building2, ContactRound, LayoutDashboard, Search, Settings2,
-  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText
+  Activity, Building2, LayoutDashboard, Search, Settings2,
+  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, Package
 } from "lucide-react";
 
 const navigation = [
@@ -16,6 +16,7 @@ const navigation = [
   { label: "Empresas", href: "/empresas", icon: Building2 },
   { label: "Leads", href: "/leads", icon: Target },
   { label: "CRM", href: "/crm", icon: Workflow },
+  { label: "Estoque", href: "/estoque", icon: Package },
   { label: "Demonstrações", href: "/demonstracoes", icon: Sparkles },
   { label: "Configurações", href: "/configuracoes", icon: Settings2 }
 ];
@@ -44,15 +45,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, fontWeight: 700 }}><Activity size={14} color="#a99fff" /> Central de evolução</div>
-            <p>As integrações serão ativadas por etapas. A estrutura já está sendo preparada para crescer com seu negócio.</p>
+            <p>Plataforma em construção: integrações e módulos são liberados após validação.</p>
           </div>
-          <div style={{ color: "#667286", fontSize: 10, padding: "16px 10px 0" }}>ARCANY DIGITAL · VERSÃO 0.1</div>
+          <div style={{ color: "#667286", fontSize: 10, padding: "16px 10px 0" }}>ARCANY DIGITAL · VERSÃO 0.2</div>
         </div>
       </aside>
       <main className="main-area">
         <header className="topbar">
           <div className="crumb">Workspace <span style={{ color: "#566176" }}>/</span> <span style={{ color: "#d8deea" }}>Arcany Digital</span></div>
-          <div className="top-actions"><div className="status-pill"><span className="status-dot" /> Ambiente inicial</div><div className="avatar">AD</div></div>
+          <div className="top-actions"><Link className="nav-link" href="/acesso">Conta</Link><div className="avatar">AD</div></div>
         </header>
         {children}
       </main>
