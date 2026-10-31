@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Plus, Search, Phone, MessageCircle, Pencil, Trash2, Download } from "lucide-react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Plus, Search, Phone, MessageCircle, Pencil, Trash2, Download, CloudUpload } from "lucide-react";
 
 type Stage = "novo" | "contato" | "proposta" | "negociacao" | "cliente" | "perdido";
 type Lead = { id: string; company: string; contact: string; phone: string; segment: string; interest: string; stage: Stage; followUp: string; notes: string };
@@ -18,6 +19,8 @@ export default function LeadsPage() {
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("todos");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
 
   useEffect(() => {
     try {
@@ -38,6 +41,29 @@ export default function LeadsPage() {
     ["Propostas", leads.filter((l) => ["proposta", "negociacao"].includes(l.stage)).length],
     ["Clientes", leads.filter((l) => l.stage === "cliente").length],
   ];
+
+  async function syncToCloud() {
+    const db = getSupabaseBrowserClient();
+    if (!db) { setSyncMessage("Configure o Supabase na Vercel para sincronizar."); return; }
+    setSyncing(true); setSyncMessage("");
+    try {
+      const { data: userData } = await db.auth.getUser();
+      if (!userData.user) throw new Error("Entre na sua conta antes de sincronizar.");
+      const { data: membership, error: memberError } = await db.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      if (memberError) throw memberError;
+      if (!membership) throw new Error("Organização não encontrada. Acesse Conta e conclua o cadastro.");
+      const { data: existing, error: existingError } = await db.from("leads").select("company_name,phone").eq("organization_id", membership.organization_id);
+      if (existingError) throw existingError;
+      const keys = new Set((existing || []).map((x: {company_name:string;phone:string|null}) => x.company_name.toLowerCase().trim()+"|"+(x.phone||"").replace(/\\D/g,"")));
+      const pending = leads.filter(l => !keys.has(l.company.toLowerCase().trim()+"|"+l.phone.replace(/\\D/g,"")));
+      if (!pending.length) { setSyncMessage("Seus leads já estão sincronizados. Nenhum registro duplicado foi criado."); return; }
+      const payload = pending.map(l => ({ organization_id: membership.organization_id, company_name: l.company, contact_name: l.contact || null, phone: l.phone || null, segment: l.segment || null, interest: l.interest || null, stage: l.stage, follow_up_at: l.followUp || null, notes: l.notes || null }));
+      const { error } = await db.from("leads").insert(payload);
+      if (error) throw error;
+      setSyncMessage(pending.length+" lead(s) enviados para a nuvem com sucesso.");
+    } catch (error) { setSyncMessage(error instanceof Error ? error.message : "Não foi possível sincronizar."); }
+    finally { setSyncing(false); }
+  }
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,8 +88,9 @@ export default function LeadsPage() {
     <div className="stat-grid" style={{ marginTop: 22 }}>{metrics.map(([name, value]) => <div className="panel stat-card" key={name}><div className="stat-label">{name}</div><div className="stat-value">{value}</div></div>)}</div>
     <section className="panel" style={{ marginTop: 16 }}>
       <div className="panel-heading" style={{ flexWrap: "wrap" }}><div><div className="panel-title">Carteira de oportunidades</div><div className="panel-subtitle">{ready ? leads.length + " lead(s) salvos neste navegador" : "Carregando..."}</div></div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="secondary-button" type="button" onClick={syncToCloud} disabled={!leads.length || syncing}><CloudUpload size={13}/> {syncing ? "Sincronizando..." : "Sincronizar nuvem"}</button><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
       </div>
+      {syncMessage && <p role="status" style={{padding:"0 16px",fontSize:11,color:"#e9c77b"}}>{syncMessage}</p>}
       {showForm && <form onSubmit={save} style={{ margin: 16, padding: 15, border: "1px solid rgba(139,124,255,.28)", borderRadius: 12, display: "grid", gap: 11 }}>
         <strong style={{ fontSize: 13 }}>{editing ? "Editar lead" : "Cadastrar lead"}</strong>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
@@ -91,6 +118,6 @@ export default function LeadsPage() {
         </div>
       </article>)}</div> : <div className="empty-state"><div className="empty-title">{leads.length ? "Nenhum resultado" : "Sua carteira começa com o primeiro contato"}</div><p className="empty-copy">{leads.length ? "Altere a busca ou o filtro." : "Cadastre uma empresa encontrada na prospecção para acompanhar o contato."}</p></div>}
     </section>
-    <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.6, marginTop: 12 }}>Nesta primeira etapa, os registros ficam somente neste navegador e aparelho. Ainda não há sincronização na nuvem nem banco de dados multiusuário; essa integração será necessária antes de oferecer o CRM como SaaS.</p>
+    <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.6, marginTop: 12 }}>Os cadastros feitos nesta tela permanecem no navegador até você usar “Sincronizar nuvem”. A sincronização envia os registros para a organização conectada e evita duplicar empresa + telefone.</p>
   </div></AppShell>;
 }
