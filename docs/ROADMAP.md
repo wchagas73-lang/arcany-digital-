@@ -21,7 +21,9 @@
 - [x] Filtrar empresas com ou sem site listado no perfil do Google.
 - [x] Selecionar foco comercial: site, cardápio, e-commerce, Google, estoque, CRM ou financeiro.
 - [x] Exibir sinais públicos encontrados e itens que ainda precisam de investigação.
-- [ ] Consultar páginas públicas para verificar cardápios, catálogos e lojas virtuais, registrando evidências e data.
+- [x] Analisar a página inicial pública do site e procurar sinais de cardápio, catálogo, e-commerce, carrinho e pedidos.
+- [x] Exibir evidências encontradas, endereço consultado e data da verificação, sem tratar ausência de sinal como prova.
+- [ ] Ampliar a análise para páginas internas públicas (menu, produtos, loja e pedidos), registrando evidências e data.
 - [ ] Criar checklist de diagnóstico por empresa e salvar o resultado no banco.
 - [ ] Deduplicar empresas e permitir revisão manual.
 
