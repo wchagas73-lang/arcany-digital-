@@ -20,3 +20,8 @@ create policy storefront_member_manage on public.public_storefronts for all
   with check (public.is_org_member(organization_id));
 create index if not exists storefront_org_idx on public.public_storefronts(organization_id, created_at desc);
 create index if not exists storefront_project_idx on public.public_storefronts(project_id);
+
+-- Explicit privileges; row-level security still controls which rows are visible.
+grant select on public.public_storefronts to anon, authenticated;
+grant insert, update, delete on public.public_storefronts to authenticated;
+grant select, insert, update on public.store_orders to authenticated;
