@@ -196,7 +196,7 @@ export default function ProspeccaoPage() {
 const segmentSuggestions = [
   "Academias", "Agências de publicidade", "Agências de turismo", "Advogados", "Agricultura",
   "Alimentação saudável", "Aluguel de equipamentos", "Autoescolas", "Autopeças", "Barbearias",
-  "Bares", " clínicas", "Clínicas médicas", "Clínicas odontológicas", "Contabilidades",
+  "Bares", "Clínicas", "Clínicas médicas", "Clínicas odontológicas", "Contabilidades",
   "Cosméticos", "Construção civil", "Cursos profissionalizantes", "Distribuidoras",
   "Escolas", "Eletricistas", "Eletrônicos", "Escritórios de arquitetura", "Farmácias",
   "Fisioterapia", "Floriculturas", "Hotéis", "Imobiliárias", "Indústrias",
