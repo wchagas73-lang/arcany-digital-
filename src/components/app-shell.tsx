@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity, Building2, LayoutDashboard, Search, Settings2,
+  Activity, Building2, LayoutDashboard, Search, Settings2, Globe, Wallet,
   Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, Package
 } from "lucide-react";
 
@@ -13,10 +13,12 @@ const navigation = [
   { label: "Central de vendas", href: "/vendas", icon: MessageSquareText },
   { label: "Diagnóstico", href: "/diagnostico", icon: ClipboardCheck },
   { label: "Central de soluções", href: "/solucoes", icon: Wrench },
+  { label: "Criar projetos", href: "/projetos", icon: Globe },
   { label: "Empresas", href: "/empresas", icon: Building2 },
   { label: "Leads", href: "/leads", icon: Target },
   { label: "CRM", href: "/crm", icon: Workflow },
   { label: "Estoque", href: "/estoque", icon: Package },
+  { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Demonstrações", href: "/demonstracoes", icon: Sparkles },
   { label: "Configurações", href: "/configuracoes", icon: Settings2 }
 ];
