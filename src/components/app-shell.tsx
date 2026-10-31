@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity, Building2, ContactRound, LayoutDashboard, Search, Settings2,
-  Sparkles, Target, Workflow, ClipboardCheck
+  Sparkles, Target, Workflow, ClipboardCheck, Wrench
 } from "lucide-react";
 
 const navigation = [
   { label: "Visão geral", href: "/dashboard", icon: LayoutDashboard },
   { label: "Prospecção", href: "/prospeccao", icon: Search },
   { label: "Diagnóstico", href: "/diagnostico", icon: ClipboardCheck },
+  { label: "Central de soluções", href: "/solucoes", icon: Wrench },
   { label: "Empresas", href: "/empresas", icon: Building2 },
   { label: "Leads", href: "/leads", icon: Target },
   { label: "CRM", href: "/crm", icon: Workflow },
