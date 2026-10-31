@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, ExternalLink, MapPin, Instagram, Plus, Minus } from "lucide-react";
+import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram } from "lucide-react";
 
 const solutions = [
   { id: "site", title: "Site profissional", description: "Apresentação da empresa, serviços, localização e contato.", icon: Globe, includes: ["Página inicial personalizada", "Sobre a empresa e serviços", "Galeria de fotos", "Localização e contato pelo WhatsApp"] },
@@ -59,7 +59,7 @@ export default function SolucoesPage() {
     }
   }
 
-  const whatsappDigits = whatsapp.replace(/\\D/g, "");
+  const whatsappDigits = whatsapp.replace(/\D/g, "");
   const whatsappUrl = whatsappDigits ? "https://wa.me/" + (whatsappDigits.startsWith("55") ? whatsappDigits : "55" + whatsappDigits) : "";
 
   return (
