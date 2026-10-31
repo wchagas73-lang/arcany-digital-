@@ -5,6 +5,7 @@ Atualizado em 31/10/2026.
 ## Implementado no repositório
 
 - Cliente de navegador Supabase e tela de acesso/cadastro.
+- Prospecção por cidade, UF e segmento usando Google Places, com filtro de site listado e carregamento paginado de resultados.
 - Criação automática da organização no primeiro acesso autenticado.
 - Controle de estoque com cadastro de produtos, saldo inicial e movimentações de entrada, saída, perda e devolução.
 - Financeiro com lançamentos de receitas/despesas, vencimento e status.
@@ -21,7 +22,8 @@ Atualizado em 31/10/2026.
 
 - A compilação de produção do commit `027b11d2` passou no GitHub Actions.
 - A compilação do criador de projetos e da vitrine pública também passou em commits anteriores.
-- Há novas execuções de build em andamento para os módulos de pedidos, movimentação de estoque e navegação final. Consultar o GitHub Actions antes de marcar o conjunto atual como validado.
+- O GitHub Actions confirmou sucesso para a compilação do commit `69db22e9` e para os módulos de pedidos, estoque e navegação.
+- A paginação da prospecção foi adicionada nos commits `7cbb5f1c` e `783467e5`; as respectivas execuções devem ser consultadas antes de considerar essa atualização validada.
 
 ## Dependências externas que não podem ser concluídas só pelo repositório
 
@@ -32,6 +34,8 @@ Atualizado em 31/10/2026.
 5. Configurar um provedor de pagamento para Pix/cartão; atualmente o fluxo registra pedido e direciona a conversa para o WhatsApp, sem cobrar online.
 6. Configurar domínio próprio e publicação independente para cada cliente; as vitrines atuais são hospedadas no domínio Arcany.
 7. Integrar baixa automática de estoque com pedidos e testar segurança com usuários de organizações diferentes.
+8. Implementar e validar cobrança online, webhooks de pagamento, reembolsos e conciliação, caso a Arcany vá receber pagamentos dentro da plataforma.
+9. Configurar monitoramento, limites de uso e alertas para as APIs externas, além de política de privacidade e termos de uso.
 
 ## Critério de conclusão
 
