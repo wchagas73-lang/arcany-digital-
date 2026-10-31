@@ -31,7 +31,13 @@
 - [ ] Salvar diagnóstico vinculado à empresa no banco de dados.
 - [ ] Gerar recomendações de soluções com base nos problemas confirmados.
 
-## Fase 5 — Presença e publicação no Google\n- [ ] Consultar e orientar a criação ou melhoria do Perfil da Empresa no Google.\n- [ ] Integrar a API do Perfil da Empresa com OAuth e autorização explícita do proprietário.\n- [ ] Preparar fluxo de atualização de informações, fotos, horários e categorias.\n- [ ] Implementar publicação somente após autorização e aprovação do responsável; acompanhar verificação do Google.\n\n## Fase 6 — CRM
+## Fase 5 — Presença e publicação no Google
+- [ ] Consultar e orientar a criação ou melhoria do Perfil da Empresa no Google.
+- [ ] Integrar a API do Perfil da Empresa com OAuth e autorização explícita do proprietário.
+- [ ] Preparar fluxo de atualização de informações, fotos, horários e categorias.
+- [ ] Implementar publicação somente após autorização e aprovação do responsável; acompanhar verificação do Google.
+
+## Fase 6 — CRM
 - [ ] Pipeline de vendas configurável.
 - [ ] Tarefas, lembretes e histórico de contatos.
 - [ ] Indicadores calculados a partir dos dados reais.
