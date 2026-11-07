@@ -20,7 +20,13 @@ export default function AccessPage() {
     setBusy(true); setMessage("");
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?org=${encodeURIComponent(name.trim() || "Minha empresa")}`,
+          },
+        });
         if (error) throw error;
         if (!data.session) { setMessage("Cadastro recebido. Confirme o e-mail e depois entre. Se a confirmação estiver desativada no Supabase, você poderá entrar imediatamente."); return; }
       } else {
