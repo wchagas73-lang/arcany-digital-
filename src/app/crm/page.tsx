@@ -37,7 +37,7 @@ export default function CrmPage(){
   const mapped=((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));
   setLeads(mapped);localStorage.setItem(scopedKey,JSON.stringify(mapped));
   setCloud(true);setReady(true);
-,[]);
+ },[]);
  useEffect(()=>{void load();},[load]);
  const filtered=useMemo(()=>leads.filter(l=>[l.company,l.contact,l.segment,l.interest].join(" ").toLowerCase().includes(query.toLowerCase())),[leads,query]);
  const active=leads.filter(l=>!["cliente","perdido"].includes(l.stage)).length;
