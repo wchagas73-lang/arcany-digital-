@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   Activity, Building2, LayoutDashboard, Search, Settings2, Globe,
-  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText
+  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, LogOut
 } from "lucide-react";
 
 const navigation = [
@@ -23,6 +25,26 @@ const navigation = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (supabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      }
+    } catch {
+      setSigningOut(false);
+      return;
+    }
+    router.replace("/acesso");
+    router.refresh();
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -53,7 +75,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="main-area">
         <header className="topbar">
           <div className="crumb">Workspace <span style={{ color: "#566176" }}>/</span> <span style={{ color: "#d8deea" }}>Arcany Digital</span></div>
-          <div className="top-actions"><Link className="nav-link" href="/acesso">Conta</Link><div className="avatar">AD</div></div>
+          <div className="top-actions">
+            <button type="button" className="nav-link" onClick={signOut} disabled={signingOut} aria-label="Sair da conta" title="Encerrar sessão">
+              <LogOut size={14} />{signingOut ? "Saindo..." : "Sair"}
+            </button>
+            <div className="avatar">AD</div>
+          </div>
         </header>
         {children}
       </main>
