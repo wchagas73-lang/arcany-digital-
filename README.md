@@ -1,21 +1,50 @@
 # Arcany Digital
 
-Plataforma SaaS para prospecção comercial, análise de presença digital, organização de empresas e leads, CRM e criação de demonstrações de sites.
+A Arcany Digital é uma plataforma SaaS para profissionais e empreendedores que prospectam empresas e desenvolvem soluções digitais sob medida.
 
-## Estado do projeto
+O assinante da Arcany é o profissional que presta serviços digitais. As empresas prospectadas são clientes desse profissional: elas recebem sites, catálogos, lojas, automações ou sistemas desenvolvidos, mas não precisam criar conta na Arcany para operar o próprio negócio.
 
-Esta é a fundação inicial da aplicação. O painel e a navegação estão preparados; buscas reais de empresas, integrações com provedores, autenticação e persistência em banco de dados serão implementadas nas próximas etapas. Nenhum lead ou indicador fictício é apresentado como dado real.
+## O que a plataforma organiza
+
+- Prospecção de empresas por cidade, estado e segmento.
+- Cadastro de empresas, leads e contatos.
+- Diagnóstico de presença digital e oportunidades.
+- Preparação de abordagens comerciais e propostas.
+- CRM, etapas de negociação e acompanhamentos.
+- Briefings, projetos, demonstrações e entregas digitais.
+- Evolução futura para manutenção, suporte e relacionamento pós-entrega.
+
+## Isolamento entre assinantes
+
+Cada profissional possui sua própria conta e organização. Empresas prospectadas, contatos, diagnósticos, propostas e projetos devem ficar isolados por organização. Um assinante não pode consultar os dados de outro.
+
+O banco usa Supabase Auth, PostgreSQL e Row Level Security (RLS). As rotas privadas exigem sessão válida. As chaves privilegiadas nunca devem ser colocadas em variáveis `NEXT_PUBLIC_` ou no navegador.
 
 ## Tecnologias
 
-- Next.js (App Router)
-- React e TypeScript
+- Next.js 15 (App Router)
+- React 19
+- TypeScript
+- Supabase Auth, PostgreSQL e RLS
 - Tailwind CSS
 - Lucide React
+- Google Places API para pesquisa de negócios, com chave somente no servidor
 
-## Executar localmente
+## Configuração
 
-Requer Node.js 20.9 ou superior.
+Configure no ambiente de implantação:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (preferencial) ou `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `GOOGLE_PLACES_API_KEY` (para prospecção pelo Google Places)
+
+`SUPABASE_SERVICE_ROLE_KEY` só deve existir no servidor quando houver uma necessidade administrativa comprovada. A aplicação não deve expor essa chave ao cliente.
+
+No Supabase Auth, configure a URL do site e permita os endereços de retorno usados pelo ambiente publicado, incluindo `/auth/callback`.
+
+## Desenvolvimento
+
+Requer Node.js 22 ou superior.
 
 ```bash
 npm install
@@ -24,15 +53,12 @@ npm run dev
 
 Abra http://localhost:3000.
 
-## Publicar na Vercel
+## Validação
 
-1. Importe este repositório no painel da Vercel.
-2. Mantenha o framework como Next.js.
-3. Use os comandos padrão de instalação e build.
-4. Clique em Deploy.
+O GitHub Actions executa auditoria de dependências, build de produção e lint. A conclusão da compilação não substitui o teste real de cadastro, confirmação de e-mail, login, isolamento entre organizações e publicação na Vercel.
 
-Não há variáveis de ambiente obrigatórias nesta primeira fase.
+## Banco de dados
 
-## Próximas etapas
+As migrações ficam em `supabase/migrations`. Não remova tabelas antigas apenas por estarem sem registros: primeiro confirme dependências, dados e referências no código. As tabelas operacionais que eventualmente forem usadas nas soluções entregues aos clientes não transformam a Arcany em um ERP de lojistas.
 
-Consulte [docs/ROADMAP.md](docs/ROADMAP.md).
+Consulte [docs/ROADMAP.md](docs/ROADMAP.md) para o plano de evolução.
