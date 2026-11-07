@@ -14,35 +14,38 @@ const columns:{id:Stage;title:string;hint:string}[]=[
 {id:"novo",title:"Novos leads",hint:"Ainda não contatados"},{id:"contato",title:"Em contato",hint:"Primeira conversa feita"},{id:"proposta",title:"Proposta enviada",hint:"Aguardando resposta"},{id:"negociacao",title:"Negociação",hint:"Ajustando a solução"},{id:"cliente",title:"Fechados",hint:"Clientes conquistados"},{id:"perdido",title:"Não avançaram",hint:"Oportunidades encerradas"}];
 
 export default function CrmPage(){
- const [leads,setLeads]=useState<Lead[]>([]);const [ready,setReady]=useState(false);const [query,setQuery]=useState("");const [cloud,setCloud]=useState(false);const [notice,setNotice]=useState("");
+ const [leads,setLeads]=useState<Lead[]>([]);const [ready,setReady]=useState(false);const [query,setQuery]=useState("");const [cloud,setCloud]=useState(false);const [notice,setNotice]=useState("");const [storageKey,setStorageKey]=useState<string|null>(null);
  const load=useCallback(async()=>{
-  const local=(()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]") as Lead[];}catch{return [];}})();
   const db=getSupabaseBrowserClient();
-  if(!db){setLeads(local);setNotice("Modo local: conecte o Supabase para sincronizar entre aparelhos.");setReady(true);return;}
-  const {data:user}=await db.auth.getUser();
-  if(!user.user){setLeads(local);setNotice("Entre na sua conta para sincronizar o CRM na nuvem.");setReady(true);return;}
+  if(!db){setLeads([]);setCloud(false);setNotice("Conecte o Supabase para acessar o CRM desta conta.");setReady(true);return;}
+  const {data:user,error:userError}=await db.auth.getUser();
+  if(userError||!user.user){setLeads([]);setCloud(false);setNotice("Entre na sua conta para acessar os dados do CRM.");setReady(true);return;}
+  const scopedKey=`${STORAGE_KEY}:${user.user.id}`;
+  setStorageKey(scopedKey);
+  const local=(()=>{try{return JSON.parse(localStorage.getItem(scopedKey)||"[]") as Lead[];}catch{return [];}})();
   const {data:membership,error:memberError}=await db.from("organization_members").select("organization_id").eq("user_id",user.user.id).limit(1).maybeSingle();
-  if(memberError||!membership){setLeads(local);setNotice(memberError?.message||"Organização não encontrada. Verifique seu cadastro.");setReady(true);return;}
+  if(memberError||!membership){setLeads(local);setCloud(false);setNotice(memberError?.message||"Organização não encontrada. Verifique seu cadastro.");setReady(true);return;}
 
   const {data:rows,error}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});
-  if(error){setLeads(local);setNotice("Não foi possível ler os leads na nuvem: "+error.message);setReady(true);return;}
+  if(error){setLeads(local);setCloud(false);setNotice("Não foi possível ler os leads na nuvem: "+error.message);setReady(true);return;}
   if((rows||[]).length===0&&local.length){
    const payload=local.map(l=>({organization_id:membership.organization_id,company_name:l.company,contact_name:l.contact||null,phone:l.phone||null,segment:l.segment||null,interest:l.interest||null,stage:l.stage,follow_up_at:l.followUp||null,notes:l.notes||null}));
    const {error:insertError}=await db.from("leads").insert(payload);
-   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});setLeads(((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));setCloud(true);setNotice("Leads locais importados para a nuvem.");setReady(true);return;}
-   setNotice("Falha ao importar dados locais: "+insertError.message);
+   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});const mapped=((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));setLeads(mapped);localStorage.setItem(scopedKey,JSON.stringify(mapped));setCloud(true);setNotice("Leads desta conta importados para a nuvem.");setReady(true);return;}
+   setNotice("Falha ao importar dados desta conta: "+insertError.message);
   }
-  setLeads(((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""})));
+  const mapped=((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));
+  setLeads(mapped);localStorage.setItem(scopedKey,JSON.stringify(mapped));
   setCloud(true);setReady(true);
- },[]);
+,[]);
  useEffect(()=>{void load();},[load]);
  const filtered=useMemo(()=>leads.filter(l=>[l.company,l.contact,l.segment,l.interest].join(" ").toLowerCase().includes(query.toLowerCase())),[leads,query]);
  const active=leads.filter(l=>!["cliente","perdido"].includes(l.stage)).length;
  const due=leads.filter(l=>l.followUp&&l.followUp<=new Date().toISOString().slice(0,10)&&!["cliente","perdido"].includes(l.stage)).length;
  async function move(id:string,stage:Stage){
-  const next=leads.map(l=>l.id===id?{...l,stage}:l);setLeads(next);
+  const next=leads.map(l=>l.id===id?{...l,stage}:l);setLeads(next);if(storageKey)localStorage.setItem(storageKey,JSON.stringify(next));
   if(cloud){const db=getSupabaseBrowserClient();if(db){const {error}=await db.from("leads").update({stage}).eq("id",id);if(error){setNotice("Não foi possível atualizar a etapa na nuvem: "+error.message);void load();}}}
-  else localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+
  }
  function whatsapp(phone:string){const digits=phone.replace(/\D/g,"");return "https://wa.me/"+(digits.startsWith("55")?digits:"55"+digits);}
  return <AppShell><div className="content"><div className="eyebrow">Gestão de vendas</div><h1 className="page-title">CRM comercial</h1><p className="page-description">Acompanhe sua carteira desde o primeiro contato até o fechamento. Quando conectado, o pipeline é sincronizado pelo banco da organização.</p>
