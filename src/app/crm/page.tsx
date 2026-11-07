@@ -31,11 +31,11 @@ export default function CrmPage(){
   if((rows||[]).length===0&&local.length){
    const payload=local.map(l=>({organization_id:membership.organization_id,company_name:l.company,contact_name:l.contact||null,phone:l.phone||null,segment:l.segment||null,interest:l.interest||null,stage:l.stage,follow_up_at:l.followUp||null,notes:l.notes||null}));
    const {error:insertError}=await db.from("leads").insert(payload);
-   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});const mapped=((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));setLeads(mapped);localStorage.setItem(scopedKey,JSON.stringify(mapped));setCloud(true);setNotice("Leads desta conta importados para a nuvem.");setReady(true);return;}
-   setNotice("Falha ao importar dados desta conta: "+insertError.message);
+   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});const mapped=((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));setLeads(mapped);setCloud(true);setNotice("Leads desta conta importados para a nuvem.");setReady(true);return;}
+   setLeads(local);setCloud(false);setNotice("Falha ao importar dados desta conta: "+insertError.message);setReady(true);return;
   }
   const mapped=((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));
-  setLeads(mapped);localStorage.setItem(scopedKey,JSON.stringify(mapped));
+  setLeads(mapped);
   setCloud(true);setReady(true);
  },[]);
  useEffect(()=>{void load();},[load]);
@@ -43,7 +43,7 @@ export default function CrmPage(){
  const active=leads.filter(l=>!["cliente","perdido"].includes(l.stage)).length;
  const due=leads.filter(l=>l.followUp&&l.followUp<=new Date().toISOString().slice(0,10)&&!["cliente","perdido"].includes(l.stage)).length;
  async function move(id:string,stage:Stage){
-  const next=leads.map(l=>l.id===id?{...l,stage}:l);setLeads(next);if(storageKey)localStorage.setItem(storageKey,JSON.stringify(next));
+  const next=leads.map(l=>l.id===id?{...l,stage}:l);setLeads(next);if(!cloud&&storageKey)localStorage.setItem(storageKey,JSON.stringify(next));
   if(cloud){const db=getSupabaseBrowserClient();if(db){const {error}=await db.from("leads").update({stage}).eq("id",id);if(error){setNotice("Não foi possível atualizar a etapa na nuvem: "+error.message);void load();}}}
 
  }
