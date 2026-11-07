@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { ShoppingBag, Plus, Minus, MessageCircle } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 type Item={id:string;name:string;description:string;price:number;category:string};
 type Store={id:string;slug:string;title:string;description:string;config:{company:string;tagline:string;whatsapp:string;primary:string;products:Item[];kind:string}};
