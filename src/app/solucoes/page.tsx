@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus } from "lucide-react";
+import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus, Minus } from "lucide-react";
 
 const solutions = [
   { id: "site", title: "Site profissional", description: "Apresentação da empresa, serviços, localização e contato.", icon: Globe, includes: ["Página inicial personalizada", "Sobre a empresa e serviços", "Galeria de fotos", "Localização e contato pelo WhatsApp"] },
