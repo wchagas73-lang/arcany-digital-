@@ -3,17 +3,19 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
 import { Plus, Search, Phone, MessageCircle, Pencil, Trash2, Download, CloudUpload } from "lucide-react";
 
 type Stage = "novo" | "contato" | "proposta" | "negociacao" | "cliente" | "perdido";
 type Lead = { id: string; company: string; contact: string; phone: string; segment: string; interest: string; stage: Stage; followUp: string; notes: string };
 const stages: Record<Stage, string> = { novo: "Novo lead", contato: "Contato realizado", proposta: "Proposta enviada", negociacao: "Em negociação", cliente: "Cliente fechado", perdido: "Não avançou" };
-const key = "arcany-leads-v1";
+const STORAGE_KEY = "arcany-leads-v1";
 const blank = { company: "", contact: "", phone: "", segment: "", interest: "", stage: "novo" as Stage, followUp: "", notes: "" };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [ready, setReady] = useState(false);
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [form, setForm] = useState(blank);
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -23,13 +25,25 @@ export default function LeadsPage() {
   const [syncMessage, setSyncMessage] = useState("");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(key);
-      if (saved) setLeads(JSON.parse(saved) as Lead[]);
-    } catch { /* Mantém a tela utilizável se houver dados locais inválidos. */ }
-    setReady(true);
+    let active = true;
+    async function loadAccountData() {
+      const scopedKey = await getAccountScopedStorageKey(STORAGE_KEY);
+      if (!active) return;
+      setStorageKey(scopedKey);
+      if (scopedKey) {
+        try {
+          const saved = localStorage.getItem(scopedKey);
+          if (saved) setLeads(JSON.parse(saved) as Lead[]);
+        } catch { /* Mantém a tela utilizável se houver dados locais inválidos. */ }
+      }
+      setReady(true);
+    }
+    void loadAccountData();
+    return () => { active = false; };
   }, []);
-  useEffect(() => { if (ready) localStorage.setItem(key, JSON.stringify(leads)); }, [leads, ready]);
+  useEffect(() => {
+    if (ready && storageKey) localStorage.setItem(storageKey, JSON.stringify(leads));
+  }, [leads, ready, storageKey]);
 
   const visible = useMemo(() => leads.filter((lead) => {
     const text = [lead.company, lead.contact, lead.phone, lead.segment, lead.interest].join(" ").toLowerCase();
