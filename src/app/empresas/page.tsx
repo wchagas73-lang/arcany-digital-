@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Plus, Search, Building2, MessageCircle, Globe, Pencil, Trash2, Target } from "lucide-react";
 
