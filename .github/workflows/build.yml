@@ -2,9 +2,12 @@ name: Build validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/supabase-auth-protection]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -23,6 +26,8 @@ jobs:
       - name: Audit dependency vulnerabilities
         run: |
           npm audit --json > npm-audit.json || true
-          node -e 'const a=require("./npm-audit.json"); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable,via:v.via.map(x=>typeof x === "string" ? x : {name:x.name,title:x.title,range:x.range,url:x.url})}))},null,2))'
+          node -e 'const a=require("./npm-audit.json"); const v=a.metadata?.vulnerabilities || {}; console.log(JSON.stringify({vulnerabilities:v, advisories:Object.entries(a.vulnerabilities||{}).map(([name,item])=>({name,severity:item.severity,range:item.range,fixAvailable:item.fixAvailable}))},null,2)); if ((v.total || 0) > 0) process.exit(1)'
       - name: Validate production build
         run: npm run build
+      - name: Validate lint
+        run: npm run lint
