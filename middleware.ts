@@ -10,10 +10,17 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const pathname = request.nextUrl.pathname;
-  const publicRoutes = ["/acesso", "/auth/callback"];
+  // Storefronts must remain publicly accessible to customers; the dashboard
+  // and internal management routes continue to require an authenticated user.
+  const isPublicRoute =
+    pathname === "/acesso" ||
+    pathname.startsWith("/acesso/") ||
+    pathname === "/auth/callback" ||
+    pathname.startsWith("/auth/callback/") ||
+    pathname.startsWith("/loja/");
 
   if (!url || !key) {
-    if (publicRoutes.some((route) => pathname.startsWith(route))) {
+    if (isPublicRoute) {
       return response;
     }
     const target = request.nextUrl.clone();
@@ -41,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
   const { data, error } = await supabase.auth.getUser();
 
-  if ((error || !data.user) && !publicRoutes.some((route) => pathname.startsWith(route))) {
+  if ((error || !data.user) && !isPublicRoute) {
     const target = request.nextUrl.clone();
     target.pathname = "/acesso";
     target.search = "";
