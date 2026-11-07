@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
+import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
 import { Plus, Search, Building2, MessageCircle, Globe, Pencil, Trash2, Target } from "lucide-react";
 
 type Company = { id: string; name: string; segment: string; city: string; phone: string; website: string; google: string; notes: string };
@@ -13,17 +14,33 @@ const blank={name:"",segment:"",city:"",phone:"",website:"",google:"a_investigar
 export default function EmpresasPage() {
   const [companies,setCompanies]=useState<Company[]>([]);
   const [ready,setReady]=useState(false);
+  const [companyStorageKey,setCompanyStorageKey]=useState<string|null>(null);
+  const [leadStorageKey,setLeadStorageKey]=useState<string|null>(null);
   const [form,setForm]=useState(blank);
   const [editing,setEditing]=useState<string|null>(null);
   const [show,setShow]=useState(false);
   const [query,setQuery]=useState("");
   const [leadNames,setLeadNames]=useState<string[]>([]);
-  useEffect(()=>{try{const raw=localStorage.getItem(COMPANY_KEY);if(raw)setCompanies(JSON.parse(raw) as Company[]);const savedLeads=JSON.parse(localStorage.getItem(LEAD_KEY)||"[]") as Lead[];setLeadNames(savedLeads.map(l=>l.company.toLowerCase()));}catch{/* ignora dados locais inválidos */}setReady(true);},[]);
-  useEffect(()=>{if(ready)localStorage.setItem(COMPANY_KEY,JSON.stringify(companies));},[companies,ready]);
+  useEffect(()=>{
+    let active=true;
+    async function loadAccountData(){
+      const [companyKey,leadKey]=await Promise.all([getAccountScopedStorageKey(COMPANY_KEY),getAccountScopedStorageKey(LEAD_KEY)]);
+      if(!active)return;
+      setCompanyStorageKey(companyKey);setLeadStorageKey(leadKey);
+      try{
+        if(companyKey){const raw=localStorage.getItem(companyKey);if(raw)setCompanies(JSON.parse(raw) as Company[]);}
+        if(leadKey){const savedLeads=JSON.parse(localStorage.getItem(leadKey)||"[]") as Lead[];setLeadNames(savedLeads.map(l=>l.company.toLowerCase()));}
+      }catch{/* ignora dados locais inválidos */}
+      setReady(true);
+    }
+    void loadAccountData();
+    return ()=>{active=false;};
+  },[]);
+  useEffect(()=>{if(ready&&companyStorageKey)localStorage.setItem(companyStorageKey,JSON.stringify(companies));},[companies,ready,companyStorageKey]);
   const visible=useMemo(()=>companies.filter(c=>[c.name,c.segment,c.city,c.phone].join(" ").toLowerCase().includes(query.toLowerCase())),[companies,query]);
   function save(e:FormEvent<HTMLFormElement>){e.preventDefault();if(!form.name.trim())return;if(editing)setCompanies(all=>all.map(c=>c.id===editing?{...c,...form,name:form.name.trim()}:c));else setCompanies(all=>[{...form,name:form.name.trim(),id:String(Date.now())},...all]);setForm(blank);setEditing(null);setShow(false);}
   function edit(c:Company){setForm({name:c.name,segment:c.segment,city:c.city,phone:c.phone,website:c.website,google:c.google,notes:c.notes});setEditing(c.id);setShow(true);}
-  function createLead(c:Company){let current:Lead[]=[];try{const raw=localStorage.getItem(LEAD_KEY);if(raw)current=JSON.parse(raw) as Lead[];}catch{/* inicia carteira vazia */}if(current.some(l=>l.company.toLowerCase()===c.name.toLowerCase())){alert("Essa empresa já está cadastrada na carteira de leads.");return;}current.unshift({id:"lead-"+Date.now(),company:c.name,contact:"",phone:c.phone,segment:c.segment,interest:"A definir após diagnóstico",stage:"novo",followUp:"",notes:"Empresa adicionada a partir da base Arcany."});localStorage.setItem(LEAD_KEY,JSON.stringify(current));setLeadNames(current.map(l=>l.company.toLowerCase()));alert("Empresa adicionada à carteira de leads.");}
+  function createLead(c:Company){if(!leadStorageKey){alert("Entre na sua conta para registrar este lead.");return;}let current:Lead[]=[];try{const raw=localStorage.getItem(leadStorageKey);if(raw)current=JSON.parse(raw) as Lead[];}catch{/* inicia carteira vazia */}if(current.some(l=>l.company.toLowerCase()===c.name.toLowerCase())){alert("Essa empresa já está cadastrada na carteira de leads.");return;}current.unshift({id:"lead-"+Date.now(),company:c.name,contact:"",phone:c.phone,segment:c.segment,interest:"A definir após diagnóstico",stage:"novo",followUp:"",notes:"Empresa adicionada a partir da base Arcany."});localStorage.setItem(leadStorageKey,JSON.stringify(current));setLeadNames(current.map(l=>l.company.toLowerCase()));alert("Empresa adicionada à carteira de leads.");}
   const field={width:"100%",minHeight:40,border:"1px solid var(--border)",borderRadius:9,background:"#0c121d",color:"#f3f6fb",padding:"0 11px",fontSize:11};
   const label={display:"grid",gap:6,color:"#aeb9ca",fontSize:11};
   return <AppShell><div className="content">
@@ -33,7 +50,7 @@ export default function EmpresasPage() {
       {[{label:"Empresas cadastradas",value:companies.length},{label:"Com telefone",value:companies.filter(c=>c.phone.trim()).length},{label:"Com site informado",value:companies.filter(c=>c.website.trim()).length},{label:"Na carteira de leads",value:companies.filter(c=>leadNames.includes(c.name.toLowerCase())).length}].map(s=><div className="panel stat-card" key={s.label}><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>)}
     </div>
     <section className="panel" style={{marginTop:16}}>
-      <div className="panel-heading" style={{flexWrap:"wrap"}}><div><div className="panel-title">Base de empresas</div><div className="panel-subtitle">{ready?companies.length+" registro(s) neste navegador":"Carregando..."}</div></div><button type="button" className="action-button" onClick={()=>{setForm(blank);setEditing(null);setShow(v=>!v);}}><Plus size={14}/> Nova empresa</button></div>
+      <div className="panel-heading" style={{flexWrap:"wrap"}}><div><div className="panel-title">Base de empresas</div><div className="panel-subtitle">{ready?companies.length+" registro(s) da conta neste aparelho":"Carregando..."}</div></div><button type="button" className="action-button" onClick={()=>{setForm(blank);setEditing(null);setShow(v=>!v);}}><Plus size={14}/> Nova empresa</button></div>
       {show&&<form onSubmit={save} style={{margin:16,padding:15,border:"1px solid rgba(139,124,255,.28)",borderRadius:12,display:"grid",gap:11}}>
         <strong style={{fontSize:13}}>{editing?"Editar empresa":"Cadastrar empresa"}</strong>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}}>
@@ -53,6 +70,6 @@ export default function EmpresasPage() {
         <div style={{display:"flex",gap:6,alignItems:"flex-start",flexWrap:"wrap"}}>{c.phone&&<a className="secondary-button" href={"https://wa.me/55"+c.phone.replace(/\D/g,"").replace(/^55/,"")} target="_blank" rel="noreferrer"><MessageCircle size={12}/> WhatsApp</a>}{c.website&&<a className="secondary-button" href={/^https?:\/\//i.test(c.website)?c.website:"https://"+c.website} target="_blank" rel="noreferrer"><Globe size={12}/> Site</a>}<button className="secondary-button" type="button" onClick={()=>createLead(c)}><Target size={12}/> Virar lead</button><button className="secondary-button" type="button" onClick={()=>edit(c)} aria-label="Editar empresa"><Pencil size={12}/></button><button className="secondary-button" type="button" onClick={()=>{if(confirm("Excluir esta empresa da base local?"))setCompanies(all=>all.filter(x=>x.id!==c.id));}} aria-label="Excluir empresa"><Trash2 size={12}/></button></div>
       </div></article>)}</div>:<div className="empty-state"><div className="empty-icon"><Building2 size={19}/></div><div className="empty-title">{companies.length?"Nenhuma empresa encontrada":"Sua base de empresas está pronta para começar"}</div><p className="empty-copy">{companies.length?"Altere a busca para localizar um registro.":"Cadastre empresas manualmente ou salve oportunidades encontradas na prospecção."}</p></div>}
     </section>
-    <p style={{color:"var(--muted)",fontSize:10,lineHeight:1.6,marginTop:12}}>Os registros desta etapa ficam no armazenamento local do navegador e aparelho. A sincronização em nuvem, os perfis de usuário e a ligação automática com os resultados do Google Places ainda dependem da implementação do banco de dados.</p>
+    <p style={{color:"var(--muted)",fontSize:10,lineHeight:1.6,marginTop:12}}>Os registros desta etapa ficam em cache local separado por conta neste aparelho. A sincronização em nuvem, os perfis de usuário e a ligação automática com os resultados do Google Places ainda dependem da implementação do banco de dados.</p>
   </div></AppShell>;
 }
