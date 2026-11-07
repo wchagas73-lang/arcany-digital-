@@ -2,9 +2,13 @@ name: Build validation
 
 on:
   push:
-    branches: [main, feat/supabase-auth-protection]
+    branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: arcany-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -21,8 +25,8 @@ jobs:
           node-version: 22
       - name: Generate lockfile and install dependencies
         run: |
-          npm install --package-lock-only --ignore-scripts
-          npm ci --ignore-scripts
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
       - name: Audit dependency vulnerabilities
         run: |
           npm audit --json > npm-audit.json || true
