@@ -6,30 +6,47 @@
 - Empresas prospectadas, leads, diagnósticos, propostas e projetos pertencem à organização do profissional.
 - Os negócios prospectados não recebem contas Arcany por padrão.
 - As políticas RLS usam a associação entre `auth.uid()` e `organization_members` para isolar registros.
+- O fluxo atual da aplicação assume uma organização por usuário; a associação única precisa ser garantida também no banco.
 
 ## Banco de dados
 
-- RLS está habilitado em todas as tabelas do schema `public`.
-- O helper `private.is_org_member(uuid)` fica no schema privado, fora da API pública do PostgREST.
-- O helper é `SECURITY DEFINER` para consultar a associação sem recursão de RLS; seu `search_path` é restrito e os objetos são referenciados por schema.
-- `public.bootstrap_organization(text)` é a única função `SECURITY DEFINER` intencionalmente exposta como RPC autenticada. Ela precisa criar a primeira organização e associação do usuário, antes de existir uma linha de membership que permita inserções comuns. A execução é negada para `anon` e `public`; o corpo valida `auth.uid()` e impede que a mesma conta crie organizações adicionais.
-- O aviso do Supabase sobre essa função é esperado enquanto o cadastro self-service estiver habilitado. Não conceder execução a usuários anônimos.
+- RLS está habilitado nas 14 tabelas públicas da estrutura SaaS aplicada.
+- As políticas atuais de dados de negócio permitem operações apenas a `authenticated` e verificam `private.is_org_member(organization_id)` tanto em `USING` quanto em `WITH CHECK`.
+- `private.is_org_member(uuid)` fica no schema privado, fora da API pública do PostgREST. O helper é `SECURITY DEFINER`, usa `search_path` restrito e referencia objetos com schema explícito.
+- `public.bootstrap_organization(text)` é a função `SECURITY DEFINER` intencionalmente exposta como RPC autenticada. Ela cria a primeira organização e associação, valida `auth.uid()` e impede novas organizações quando já existe associação. A execução é negada para `anon` e `public`.
+- O aviso do Supabase sobre `bootstrap_organization` ser executável por usuários autenticados é esperado enquanto o cadastro self-service estiver habilitado. Não conceder execução a usuários anônimos.
 - Índices de chaves estrangeiras foram adicionados para apoiar filtros e joins.
+
+### Auditoria de privilégios — 08/11/2026
+
+A inspeção do ACL do banco Arcany encontrou privilégios padrão excessivos nas tabelas públicas: `anon` recebeu SELECT/INSERT/UPDATE/DELETE e também TRUNCATE; `authenticated` também recebeu TRUNCATE, REFERENCES e TRIGGER. As políticas RLS atuais não têm políticas para `anon`, então as operações comuns por linha permanecem bloqueadas para esse papel; porém, RLS não protege contra TRUNCATE. Os privilégios são desnecessários para as tabelas privadas do SaaS e os privilégios padrão também os propagariam para novas tabelas.
+
+Há ainda uma diferença entre o modelo da aplicação e a chave primária atual de `organization_members`: o código espera uma organização por usuário, mas a chave primária composta permite mais de uma associação. Isso também deixa uma janela de concorrência no primeiro cadastro.
+
+Foi preparado o script `docs/sql/20261108_tenant_privilege_hardening.sql` para:
+- remover privilégios de tabela de `anon`;
+- limitar `authenticated` a SELECT/INSERT/UPDATE/DELETE, sempre sujeitos às políticas RLS;
+- endurecer os privilégios padrão de tabelas e funções para os criadores de objetos;
+- impor uma associação organizacional por usuário e fechar a corrida entre chamadas simultâneas de bootstrap.
+
+**Esse script ainda não foi aplicado ao Supabase.** Não migrar empresas/leads nem habilitar persistência em nuvem até essa revisão e aplicação controlada no projeto Arcany.
 
 ## Cache local
 
 - Os caches locais de empresas e leads usam chaves com o ID do usuário autenticado.
 - Chaves antigas sem escopo não são importadas automaticamente, pois isso poderia misturar dados de contas diferentes em aparelhos compartilhados.
 - O cache local não substitui a persistência multi-dispositivo no Supabase. A sincronização completa dos módulos ainda está no roadmap.
+- A sincronização atual de leads é parcial e não substitui um processo de backup/exportação e migração idempotente. Não apagar nem substituir o cache local durante a migração.
 
 ## Segredos e implantação
 
 - Chaves públicas do Supabase podem usar variáveis `NEXT_PUBLIC_`.
 - Chaves administrativas/service-role nunca devem ser expostas ao navegador ou versionadas no Git.
-- A chave do Google Places deve permanecer no servidor.
-- Configurar no Vercel as variáveis de ambiente e no Supabase Auth as URLs de retorno permitidas, incluindo `/auth/callback`.
-- Antes de produção, testar confirmação de e-mail, login, logout, recuperação de acesso e isolamento com duas contas independentes.
+- A chave do Google Places permanece em variável de servidor (`GOOGLE_PLACES_API_KEY`), sem prefixo `NEXT_PUBLIC_`.
+- O repositório contém apenas o modelo `.env.example`; arquivos `.env` e `.env.local` estão no `.gitignore`.
+- Configurar na Vercel as variáveis `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ou a chave anon legada) e no Supabase Auth as URLs de retorno permitidas, incluindo `/auth/callback`.
+- Antes de produção, testar confirmação de e-mail, login, logout, recuperação de acesso e isolamento com duas contas independentes. Esses testes reais ainda não foram concluídos.
 
 ## Migrações
 
-As migrações versionadas refletem a sequência aplicada ao projeto Arcany. A migração opcional de páginas públicas é posterior ao helper privado e permanece separada; não é necessária para autenticação, prospecção ou CRM. Não aplicar migrações de storefront sem necessidade do módulo.
+As migrações aplicadas no banco Arcany são a estrutura inicial, a restrição de permissões das funções e o endurecimento de RLS/índices. A migração opcional de páginas públicas permanece não aplicada e não é necessária para autenticação, prospecção ou CRM. Não aplicar migrações de storefront sem necessidade demonstrada e autorização específica.
