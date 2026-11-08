@@ -1,10 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function redirectPreservingCookies(target: URL, source: NextResponse) {
+  const redirect = NextResponse.redirect(target);
+  source.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  redirect.headers.set("Cache-Control", "private, no-store");
+  return redirect;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const organizationName = (requestUrl.searchParams.get("org") || "Minha empresa").trim();
+  const organizationName = (requestUrl.searchParams.get("org") || "Minha empresa")
+    .trim()
+    .slice(0, 120);
 
   if (!code) {
     return NextResponse.redirect(new URL("/acesso?erro=confirmacao", request.url));
@@ -39,12 +48,15 @@ export async function GET(request: NextRequest) {
 
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
   if (exchangeError) {
-    return NextResponse.redirect(new URL("/acesso?erro=confirmacao", request.url));
+    return redirectPreservingCookies(
+      new URL("/acesso?erro=confirmacao", request.url),
+      response
+    );
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
-    return NextResponse.redirect(new URL("/acesso?erro=usuario", request.url));
+    return redirectPreservingCookies(new URL("/acesso?erro=usuario", request.url), response);
   }
 
   const { data: membership, error: membershipError } = await supabase
@@ -55,7 +67,10 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (membershipError) {
-    return NextResponse.redirect(new URL("/acesso?erro=organizacao", request.url));
+    return redirectPreservingCookies(
+      new URL("/acesso?erro=organizacao", request.url),
+      response
+    );
   }
 
   if (!membership) {
@@ -63,7 +78,10 @@ export async function GET(request: NextRequest) {
       org_name: organizationName.length >= 2 ? organizationName : "Minha empresa",
     });
     if (bootstrapError) {
-      return NextResponse.redirect(new URL("/acesso?erro=organizacao", request.url));
+      return redirectPreservingCookies(
+        new URL("/acesso?erro=organizacao", request.url),
+        response
+      );
     }
   }
 
