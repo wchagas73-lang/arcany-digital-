@@ -10,7 +10,7 @@
 
 ## Banco de dados
 
-- RLS está habilitado nas 14 tabelas públicas da estrutura SaaS aplicada.
+- RLS está habilitado nas 15 tabelas públicas da estrutura SaaS aplicada.
 - As políticas atuais de dados de negócio permitem operações apenas a `authenticated` e verificam `private.is_org_member(organization_id)` tanto em `USING` quanto em `WITH CHECK`.
 - `private.is_org_member(uuid)` fica no schema privado, fora da API pública do PostgREST. O helper é `SECURITY DEFINER`, usa `search_path` restrito e referencia objetos com schema explícito.
 - `public.bootstrap_organization(text)` é a função `SECURITY DEFINER` intencionalmente exposta como RPC autenticada. Ela cria a primeira organização e associação, valida `auth.uid()` e impede novas organizações quando já existe associação. A execução é negada para `anon` e `public`.
@@ -36,7 +36,8 @@ Foi preparado o script `docs/sql/20261108_tenant_privilege_hardening.sql` para:
 - Os caches locais de empresas e leads usam chaves com o ID do usuário autenticado.
 - Chaves antigas sem escopo não são importadas automaticamente, pois isso poderia misturar dados de contas diferentes em aparelhos compartilhados.
 - O cache local não substitui a persistência multi-dispositivo no Supabase. A sincronização completa dos módulos ainda está no roadmap.
-- A sincronização atual de leads é parcial e não substitui um processo de backup/exportação e migração idempotente. Não apagar nem substituir o cache local durante a migração.
+- O CRM não importa mais leads locais automaticamente quando a tabela remota está vazia. A carga para a nuvem deve ser iniciada explicitamente na tela Leads, após exportação CSV e validação de autenticação/RLS.
+- A sincronização manual atual não apaga o cache local; ela ainda é parcial e não substitui um processo de backup/exportação JSON e migração idempotente. Não apagar nem substituir o cache local durante a migração.
 
 ## Segredos e implantação
 
