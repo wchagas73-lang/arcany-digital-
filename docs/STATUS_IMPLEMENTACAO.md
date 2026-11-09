@@ -55,6 +55,7 @@ A migração opcional `20261107210000_public_storefronts.sql` permanece não apl
 
 ## Validação
 
-- A execução anterior do GitHub Actions concluiu auditoria de dependências com 0 vulnerabilidades, build de produção aprovado e lint aprovado com um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
-- Na última consulta, o deploy do projeto Vercel `arcany-digital` (sem hífen) estava concluído; o projeto separado `arcany-digital-` reportava falha de implantação. A nova alteração de CRM ainda precisa de sua própria validação.
+- No commit atual `0192810`, o GitHub Actions concluiu `npm audit` com 0 vulnerabilidades, `npm run build` aprovado e `npm run lint` aprovado. Resta um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
+- O deploy de preview do projeto Vercel `arcany-digital` (sem hífen) está concluído e marcado como Ready: `https://arcany-digital-c0nelbq2w-wchagas73-3735s-projects.vercel.app`.
+- O projeto Vercel separado `arcany-digital-` (com hífen) falhou por limite diário de implantações. Não confundir os dois projetos.
 - A compilação não substitui testes reais de autenticação, associação e isolamento multi-tenant.
