@@ -1,42 +1,60 @@
 # Arcany Digital — status de implementação
 
-Atualizado em 31/10/2026.
+Atualizado em 09/11/2026.
 
-## Implementado no repositório
+## Repositório e autenticação
 
-- Cliente de navegador Supabase e tela de acesso/cadastro.
-- Prospecção por cidade, UF e segmento usando Google Places, com filtro de site listado e carregamento paginado de resultados.
-- Criação automática da organização no primeiro acesso autenticado.
-- Controle de estoque com cadastro de produtos, saldo inicial e movimentações de entrada, saída, perda e devolução.
-- Financeiro com lançamentos de receitas/despesas, vencimento e status.
-- CRM com leitura do banco por organização, atualização de etapas e importação inicial dos leads locais quando a base remota está vazia.
-- Leads com ação manual de sincronização para a organização autenticada.
-- Criador de projetos para site, cardápio e loja, com configuração de identidade e produtos.
-- Vitrines públicas em `/loja/[slug]`, com carrinho e envio de pedido.
-- Endpoint servidor de pedidos: valida produtos e quantidades e recalcula os preços usando a configuração publicada, sem confiar no total enviado pelo navegador.
-- Painel de pedidos com atualização de status e pagamento.
-- Migrações SQL iniciais e de vitrines públicas, com RLS e privilégios explícitos.
-- Documentação de ativação do Supabase e variáveis necessárias.
+- Supabase SSR está integrado por helpers separados para navegador e servidor.
+- A tela `/acesso` permite cadastro e login por e-mail/senha.
+- No cadastro com sessão imediata, a aplicação consulta `organization_members` e chama `public.bootstrap_organization` quando ainda não há associação.
+- Quando a confirmação de e-mail está ativa, `/auth/callback` troca o código por sessão, valida o usuário, consulta a associação e chama o bootstrap se necessário.
+- No login, uma conta sem associação também tenta criar a primeira organização.
+- O middleware exige sessão nas rotas internas e mantém `/acesso`, `/auth/callback` e `/loja/:slug` públicas.
+- Os testes reais de cadastro, confirmação de e-mail, login/logout, recuperação de senha e isolamento entre duas contas ainda não foram concluídos.
+
+## Supabase Arcany
+
+Projeto-alvo exclusivo: `kiwhtyuqgvcczwtafzcn`.
+
+Migrações registradas no banco:
+1. `20261107194126_initial_saas_schema` — aplicada uma vez.
+2. `20261107194405_restrict_function_execute_permissions` — aplicada.
+3. `20261107203829_harden_tenant_rls_and_index_foreign_keys` — aplicada.
+
+Estado verificado:
+- 15 tabelas no schema público; RLS habilitado nas 15.
+- Políticas de isolamento das tabelas de negócio usam `private.is_org_member(organization_id)`.
+- `anon` não pode executar `public.bootstrap_organization(text)`; `authenticated` pode, conforme necessário ao cadastro self-service.
+- Contagens atuais: 0 organizações, 0 associações, 0 empresas e 0 leads.
+- A chave primária de `organization_members` ainda permite tecnicamente mais de uma organização por usuário. O índice único por `user_id` está preparado no script de hardening, mas ainda não foi aplicado.
+
+### Pendência de privilégios
+
+A auditoria SQL confirmou privilégios de tabela excessivos em `anon`, incluindo `TRUNCATE`, e em `authenticated`, incluindo `TRUNCATE`, `REFERENCES` e `TRIGGER`. RLS não protege contra `TRUNCATE`.
+
+O script `docs/sql/20261108_tenant_privilege_hardening.sql` foi preparado e revisado, mas não aplicado. A aplicação no banco deve aguardar revisão/aprovação da etapa de DDL e validação do ambiente. Não executar novamente a migração inicial.
+
+A migração opcional `20261107210000_public_storefronts.sql` permanece não aplicada; não é necessária para a autenticação ou para a migração de empresas/leads nesta fase.
+
+## Empresas, leads e backup
+
+- Empresas e leads continuam armazenados localmente, em chaves namespaced pelo ID do usuário autenticado.
+- Chaves locais antigas sem escopo de usuário não são importadas automaticamente, para evitar misturar dados em dispositivos compartilhados.
+- A tela Leads oferece exportação CSV e sincronização manual parcial; a sincronização não remove o cache local.
+- O CRM foi ajustado para não importar automaticamente os leads locais quando a tabela remota está vazia.
+- Empresas ainda não foram migradas para o banco.
+- Não iniciar a migração completa até corrigir privilégios, impor associação única, testar autenticação e isolamento RLS com duas contas reais e preparar backup/reconciliação idempotente.
+
+## Segredos e configuração
+
+- A árvore atual do repositório contém apenas `.env.example`, sem arquivos de ambiente reais.
+- `.gitignore` agora ignora `.env*`, com exceção explícita de `.env.example`.
+- Os helpers de navegador usam somente URL e chave publicável/anon do Supabase.
+- `GOOGLE_PLACES_API_KEY` é lida em rotas de servidor, sem prefixo `NEXT_PUBLIC_`.
+- `SUPABASE_SERVICE_ROLE_KEY` aparece apenas como nome de variável vazio/documentado no exemplo de ambiente; não deve ser configurada no cliente nem versionada com valor.
 
 ## Validação
 
-- A compilação de produção do commit `027b11d2` passou no GitHub Actions.
-- A compilação do criador de projetos e da vitrine pública também passou em commits anteriores.
-- O GitHub Actions confirmou sucesso para a compilação do commit `69db22e9` e para os módulos de pedidos, estoque e navegação.
-- A paginação da prospecção foi adicionada nos commits `7cbb5f1c` e `783467e5`; as respectivas execuções devem ser consultadas antes de considerar essa atualização validada.
-
-## Dependências externas que não podem ser concluídas só pelo repositório
-
-1. Executar as duas migrações SQL no projeto Supabase.
-2. Configurar na Vercel `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (esta última somente no servidor).
-3. Configurar a chave Google Places no servidor para a prospecção.
-4. Fazer o deploy na Vercel e validar a URL de produção.
-5. Configurar um provedor de pagamento para Pix/cartão; atualmente o fluxo registra pedido e direciona a conversa para o WhatsApp, sem cobrar online.
-6. Configurar domínio próprio e publicação independente para cada cliente; as vitrines atuais são hospedadas no domínio Arcany.
-7. Integrar baixa automática de estoque com pedidos e testar segurança com usuários de organizações diferentes.
-8. Implementar e validar cobrança online, webhooks de pagamento, reembolsos e conciliação, caso a Arcany vá receber pagamentos dentro da plataforma.
-9. Configurar monitoramento, limites de uso e alertas para as APIs externas, além de política de privacidade e termos de uso.
-
-## Critério de conclusão
-
-Não declarar a plataforma 100% pronta até que as migrações estejam aplicadas, as variáveis configuradas, o deploy validado e os fluxos de autenticação, isolamento multiempresa, criação/publicação de vitrine, pedido público, gestão de pedidos, estoque, CRM e financeiro sejam testados em produção.
+- A execução anterior do GitHub Actions concluiu auditoria de dependências com 0 vulnerabilidades, build de produção aprovado e lint aprovado com um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
+- Na última consulta, o deploy do projeto Vercel `arcany-digital` (sem hífen) estava concluído; o projeto separado `arcany-digital-` reportava falha de implantação. A nova alteração de CRM ainda precisa de sua própria validação.
+- A compilação não substitui testes reais de autenticação, associação e isolamento multi-tenant.
