@@ -55,7 +55,7 @@ A migração opcional `20261107210000_public_storefronts.sql` permanece não apl
 
 ## Validação
 
-- No commit atual `0192810`, o GitHub Actions concluiu `npm audit` com 0 vulnerabilidades, `npm run build` aprovado e `npm run lint` aprovado. Resta um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
+- No commit de código `0192810`, o GitHub Actions concluiu `npm audit` com 0 vulnerabilidades, `npm run build` aprovado e `npm run lint` aprovado. Resta um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
 - O deploy de preview do projeto Vercel `arcany-digital` (sem hífen) está concluído e marcado como Ready: `https://arcany-digital-c0nelbq2w-wchagas73-3735s-projects.vercel.app`.
 - O projeto Vercel separado `arcany-digital-` (com hífen) falhou por limite diário de implantações. Não confundir os dois projetos.
 - A compilação não substitui testes reais de autenticação, associação e isolamento multi-tenant.
