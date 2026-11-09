@@ -28,13 +28,12 @@ export default function CrmPage(){
 
   const {data:rows,error}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});
   if(error){setLeads(local);setCloud(false);setNotice("Não foi possível ler os leads na nuvem: "+error.message);setReady(true);return;}
-  if((rows||[]).length===0&&local.length){
-   const payload=local.map(l=>({organization_id:membership.organization_id,company_name:l.company,contact_name:l.contact||null,phone:l.phone||null,segment:l.segment||null,interest:l.interest||null,stage:l.stage,follow_up_at:l.followUp||null,notes:l.notes||null}));
-   const {error:insertError}=await db.from("leads").insert(payload);
-   if(!insertError){const {data:again}=await db.from("leads").select("id,company_name,contact_name,phone,segment,interest,stage,follow_up_at,notes").eq("organization_id",membership.organization_id).order("created_at",{ascending:false});const mapped=((again||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));setLeads(mapped);setCloud(true);setNotice("Leads desta conta importados para a nuvem.");setReady(true);return;}
-   setLeads(local);setCloud(false);setNotice("Falha ao importar dados desta conta: "+insertError.message);setReady(true);return;
-  }
   const mapped=((rows||[]) as DbLead[]).map(l=>({id:l.id,company:l.company_name,contact:l.contact_name||"",phone:l.phone||"",segment:l.segment||"",interest:l.interest||"",stage:l.stage,followUp:l.follow_up_at||"",notes:l.notes||""}));
+  if((rows||[]).length===0&&local.length){
+   // Never migrate local data automatically. The user must export a backup and
+   // start the explicit sync from Leads after auth and tenant isolation are tested.
+   setLeads(local);setCloud(false);setNotice("Há leads locais ainda não sincronizados. Eles foram mantidos neste aparelho e não foram enviados automaticamente. Exporte um CSV e use a sincronização manual na tela Leads quando a migração estiver liberada.");setReady(true);return;
+  }
   setLeads(mapped);
   setCloud(true);setReady(true);
  },[]);
