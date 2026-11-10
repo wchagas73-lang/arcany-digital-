@@ -12,14 +12,26 @@ revoke all privileges on all tables in schema public from anon;
 revoke truncate, references, trigger on all tables in schema public from authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 
--- Prevent future public-schema tables created by either migration owner from
--- inheriting broad anon grants or non-row-level privileges.
+-- No public sequences exist today, but secure existing/future sequences too.
+-- Authenticated keeps USAGE/SELECT for normal serial defaults; anon gets none.
+revoke all privileges on all sequences in schema public from anon;
+revoke update on all sequences in schema public from authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+
+-- Prevent future public-schema tables/sequences created by either migration owner
+-- from inheriting broad anon grants or non-row-level privileges.
 alter default privileges for role postgres in schema public
   revoke all on tables from anon;
 alter default privileges for role postgres in schema public
   revoke truncate, references, trigger on tables from authenticated;
 alter default privileges for role postgres in schema public
   grant select, insert, update, delete on tables to authenticated;
+alter default privileges for role postgres in schema public
+  revoke all on sequences from anon;
+alter default privileges for role postgres in schema public
+  revoke update on sequences from authenticated;
+alter default privileges for role postgres in schema public
+  grant usage, select on sequences to authenticated;
 
 alter default privileges for role supabase_admin in schema public
   revoke all on tables from anon;
@@ -27,6 +39,12 @@ alter default privileges for role supabase_admin in schema public
   revoke truncate, references, trigger on tables from authenticated;
 alter default privileges for role supabase_admin in schema public
   grant select, insert, update, delete on tables to authenticated;
+alter default privileges for role supabase_admin in schema public
+  revoke all on sequences from anon;
+alter default privileges for role supabase_admin in schema public
+  revoke update on sequences from authenticated;
+alter default privileges for role supabase_admin in schema public
+  grant usage, select on sequences to authenticated;
 
 -- New RPC functions must receive explicit EXECUTE grants in their own migration.
 alter default privileges for role postgres in schema public
