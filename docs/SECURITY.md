@@ -17,16 +17,18 @@
 - O aviso do Supabase sobre `bootstrap_organization` ser executável por usuários autenticados é esperado enquanto o cadastro self-service estiver habilitado. Não conceder execução a usuários anônimos.
 - Índices de chaves estrangeiras foram adicionados para apoiar filtros e joins.
 
-### Auditoria de privilégios — 08/11/2026
+### Auditoria de privilégios — 08/11/2026; rechecagem em 10/11/2026
 
 A inspeção do ACL do banco Arcany encontrou privilégios padrão excessivos nas tabelas públicas: `anon` recebeu SELECT/INSERT/UPDATE/DELETE e também TRUNCATE; `authenticated` também recebeu TRUNCATE, REFERENCES e TRIGGER. As políticas RLS atuais não têm políticas para `anon`, então as operações comuns por linha permanecem bloqueadas para esse papel; porém, RLS não protege contra TRUNCATE. Os privilégios são desnecessários para as tabelas privadas do SaaS e os privilégios padrão também os propagariam para novas tabelas.
+
+A rechecagem confirmou que não há sequências públicas atualmente, mas os privilégios padrão também concederiam acesso a `anon` e `authenticated` em sequências futuras. O script preparado agora restringe esses privilégios futuros, preservando `USAGE/SELECT` para o papel autenticado quando uma tabela usar uma sequência.
 
 Há ainda uma diferença entre o modelo da aplicação e a chave primária atual de `organization_members`: o código espera uma organização por usuário, mas a chave primária composta permite mais de uma associação. Isso também deixa uma janela de concorrência no primeiro cadastro.
 
 Foi preparado o script `docs/sql/20261108_tenant_privilege_hardening.sql` para:
-- remover privilégios de tabela de `anon`;
-- limitar `authenticated` a SELECT/INSERT/UPDATE/DELETE, sempre sujeitos às políticas RLS;
-- endurecer os privilégios padrão de tabelas e funções para os criadores de objetos;
+- remover privilégios de tabela e sequência de `anon`;
+- limitar `authenticated` a SELECT/INSERT/UPDATE/DELETE em tabelas, sempre sujeitos às políticas RLS, e a USAGE/SELECT em sequências;
+- endurecer os privilégios padrão de tabelas, sequências e funções para os criadores de objetos;
 - impor uma associação organizacional por usuário e fechar a corrida entre chamadas simultâneas de bootstrap.
 
 **Esse script ainda não foi aplicado ao Supabase.** Não migrar empresas/leads nem habilitar persistência em nuvem até essa revisão e aplicação controlada no projeto Arcany.
@@ -34,7 +36,7 @@ Foi preparado o script `docs/sql/20261108_tenant_privilege_hardening.sql` para:
 ## Cache local
 
 - Os caches locais de empresas e leads usam chaves com o ID do usuário autenticado.
-- Chaves antigas sem escopo não são importadas automaticamente, pois isso poderia misturar dados de contas diferentes em aparelhos compartilhados.
+- Chaves antigas sem escopo não são importadas automaticamente: isso evita expor dados de uma conta a outra em aparelhos compartilhados.
 - O cache local não substitui a persistência multi-dispositivo no Supabase. A sincronização completa dos módulos ainda está no roadmap.
 - O CRM não importa mais leads locais automaticamente quando a tabela remota está vazia. A carga para a nuvem deve ser iniciada explicitamente na tela Leads, após exportação CSV e validação de autenticação/RLS.
 - A sincronização manual atual não apaga o cache local; ela ainda é parcial e não substitui um processo de backup/exportação JSON e migração idempotente. Não apagar nem substituir o cache local durante a migração.
