@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
 import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
+import { LocalBackupButton } from "@/components/local-backup-button";
 import { Plus, Search, Building2, MessageCircle, Globe, Pencil, Trash2, Target } from "lucide-react";
 
 type Company = { id: string; name: string; segment: string; city: string; phone: string; website: string; google: string; notes: string };
@@ -50,7 +51,7 @@ export default function EmpresasPage() {
       {[{label:"Empresas cadastradas",value:companies.length},{label:"Com telefone",value:companies.filter(c=>c.phone.trim()).length},{label:"Com site informado",value:companies.filter(c=>c.website.trim()).length},{label:"Na carteira de leads",value:companies.filter(c=>leadNames.includes(c.name.toLowerCase())).length}].map(s=><div className="panel stat-card" key={s.label}><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>)}
     </div>
     <section className="panel" style={{marginTop:16}}>
-      <div className="panel-heading" style={{flexWrap:"wrap"}}><div><div className="panel-title">Base de empresas</div><div className="panel-subtitle">{ready?companies.length+" registro(s) da conta neste aparelho":"Carregando..."}</div></div><button type="button" className="action-button" onClick={()=>{setForm(blank);setEditing(null);setShow(v=>!v);}}><Plus size={14}/> Nova empresa</button></div>
+      <div className="panel-heading" style={{flexWrap:"wrap"}}><div><div className="panel-title">Base de empresas</div><div className="panel-subtitle">{ready?companies.length+" registro(s) da conta neste aparelho":"Carregando..."}</div></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><LocalBackupButton/><button type="button" className="action-button" onClick={()=>{setForm(blank);setEditing(null);setShow(v=>!v);}}><Plus size={14}/> Nova empresa</button></div></div>
       {show&&<form onSubmit={save} style={{margin:16,padding:15,border:"1px solid rgba(139,124,255,.28)",borderRadius:12,display:"grid",gap:11}}>
         <strong style={{fontSize:13}}>{editing?"Editar empresa":"Cadastrar empresa"}</strong>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}}>
