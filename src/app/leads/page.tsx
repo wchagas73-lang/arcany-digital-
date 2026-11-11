@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
+import { LocalBackupButton } from "@/components/local-backup-button";
 import { Plus, Search, Phone, MessageCircle, Pencil, Trash2, Download, CloudUpload } from "lucide-react";
 
 type Stage = "novo" | "contato" | "proposta" | "negociacao" | "cliente" | "perdido";
@@ -102,7 +103,7 @@ export default function LeadsPage() {
     <div className="stat-grid" style={{ marginTop: 22 }}>{metrics.map(([name, value]) => <div className="panel stat-card" key={name}><div className="stat-label">{name}</div><div className="stat-value">{value}</div></div>)}</div>
     <section className="panel" style={{ marginTop: 16 }}>
       <div className="panel-heading" style={{ flexWrap: "wrap" }}><div><div className="panel-title">Carteira de oportunidades</div><div className="panel-subtitle">{ready ? leads.length + " lead(s) salvos neste navegador" : "Carregando..."}</div></div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="secondary-button" type="button" onClick={syncToCloud} disabled={!leads.length || syncing}><CloudUpload size={13}/> {syncing ? "Sincronizando..." : "Sincronizar nuvem"}</button><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><LocalBackupButton/><button className="secondary-button" type="button" onClick={syncToCloud} disabled={!leads.length || syncing}><CloudUpload size={13}/> {syncing ? "Sincronizando..." : "Sincronizar nuvem"}</button><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
       </div>
       {syncMessage && <p role="status" style={{padding:"0 16px",fontSize:11,color:"#e9c77b"}}>{syncMessage}</p>}
       {showForm && <form onSubmit={save} style={{ margin: 16, padding: 15, border: "1px solid rgba(139,124,255,.28)", borderRadius: 12, display: "grid", gap: 11 }}>
