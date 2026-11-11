@@ -2,9 +2,10 @@ name: Build validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/supabase-auth-protection]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: arcany-build-${{ github.event.pull_request.number || github.ref }}
