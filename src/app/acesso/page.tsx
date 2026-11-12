@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ensureUserOrganization } from "@/lib/supabase/organization";
 
 export default function AccessPage() {
   const router = useRouter();
@@ -16,8 +17,13 @@ export default function AccessPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) { setMessage("A conexão com o Supabase ainda não foi configurada nas variáveis de ambiente da Vercel."); return; }
-    setBusy(true); setMessage("");
+    if (!supabase) {
+      setMessage("A conexão com o Supabase ainda não foi configurada nas variáveis de ambiente da Vercel.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage("");
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -28,24 +34,32 @@ export default function AccessPage() {
           },
         });
         if (error) throw error;
-        if (!data.session) { setMessage("Cadastro recebido. Confirme o e-mail e depois entre. Se a confirmação estiver desativada no Supabase, você poderá entrar imediatamente."); return; }
+        if (!data.session) {
+          setMessage("Cadastro recebido. Confirme o e-mail e depois entre. Se a confirmação estiver desativada no Supabase, você poderá entrar imediatamente.");
+          return;
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      const { data: userData } = await supabase.auth.getUser();
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
       if (!userData.user) throw new Error("Não foi possível validar o usuário.");
-      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
-      if (memberError) throw memberError;
-      if (!membership) {
-        const { error: orgError } = await supabase.rpc("bootstrap_organization", { org_name: name.trim() || "Minha empresa" });
-        if (orgError) throw orgError;
-      }
+
+      await ensureUserOrganization(
+        supabase,
+        userData.user.id,
+        name.trim() || "Minha empresa"
+      );
+
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível concluir o acesso.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20, background: "#080d16", color: "#f3f6fb" }}>
