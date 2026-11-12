@@ -24,9 +24,10 @@ export async function ensureUserOrganization(
   if (currentError) throw currentError;
   if (current) return (current as Membership).organization_id;
 
+  const normalizedName = organizationName.trim().slice(0, 120);
   const { data: createdOrganizationId, error: bootstrapError } =
     await supabase.rpc("bootstrap_organization", {
-      org_name: organizationName.trim().slice(0, 120) || "Minha empresa",
+      org_name: normalizedName.length >= 2 ? normalizedName : "Minha empresa",
     });
 
   if (bootstrapError) {
