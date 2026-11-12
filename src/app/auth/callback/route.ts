@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { ensureUserOrganization } from "@/lib/supabase/organization";
 
 function redirectPreservingCookies(target: URL, source: NextResponse) {
   const redirect = NextResponse.redirect(target);
@@ -59,30 +60,17 @@ export async function GET(request: NextRequest) {
     return redirectPreservingCookies(new URL("/acesso?erro=usuario", request.url), response);
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", userData.user.id)
-    .limit(1)
-    .maybeSingle();
-
-  if (membershipError) {
+  try {
+    await ensureUserOrganization(
+      supabase,
+      userData.user.id,
+      organizationName.length >= 2 ? organizationName : "Minha empresa"
+    );
+  } catch {
     return redirectPreservingCookies(
       new URL("/acesso?erro=organizacao", request.url),
       response
     );
-  }
-
-  if (!membership) {
-    const { error: bootstrapError } = await supabase.rpc("bootstrap_organization", {
-      org_name: organizationName.length >= 2 ? organizationName : "Minha empresa",
-    });
-    if (bootstrapError) {
-      return redirectPreservingCookies(
-        new URL("/acesso?erro=organizacao", request.url),
-        response
-      );
-    }
   }
 
   response.headers.set("Cache-Control", "private, no-store");
