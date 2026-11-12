@@ -62,9 +62,10 @@ export default function LeadsPage() {
     if (!db) { setSyncMessage("Configure o Supabase na Vercel para sincronizar."); return; }
     setSyncing(true); setSyncMessage("");
     try {
-      const { data: userData } = await db.auth.getUser();
+      const { data: userData, error: userError } = await db.auth.getUser();
+      if (userError) throw userError;
       if (!userData.user) throw new Error("Entre na sua conta antes de sincronizar.");
-      const { data: membership, error: memberError } = await db.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      const { data: membership, error: memberError } = await db.from("organization_members").select("organization_id").eq("user_id", userData.user.id).maybeSingle();
       if (memberError) throw memberError;
       if (!membership) throw new Error("Organização não encontrada. Acesse Conta e conclua o cadastro.");
       const { data: existing, error: existingError } = await db.from("leads").select("company_name,phone").eq("organization_id", membership.organization_id);
