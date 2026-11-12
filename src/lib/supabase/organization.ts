@@ -3,9 +3,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 type Membership = { organization_id: string };
 
 /**
- * Ensures the authenticated user has exactly one visible organization.
- * If two signup/login callbacks race, a successful concurrent bootstrap is
- * accepted after re-reading the membership. Multiple memberships fail closed.
+ * Verifies that the authenticated user has one unambiguous visible organization.
+ * If a competing bootstrap fails because another request completed first, the
+ * membership is re-read. Multiple memberships fail closed until the database
+ * uniqueness constraint is applied.
  */
 export async function ensureUserOrganization(
   supabase: SupabaseClient,
