@@ -137,3 +137,11 @@ Limites conhecidos:
 - O fluxo antigo tentava inserir em `public_storefronts`, tabela cuja migração opcional não foi aplicada. O novo fluxo não tenta publicar automaticamente nem criar uma vitrine pública.
 - O projeto é salvo com status `planejamento`. Publicação, preview público, repositório de cliente e editor visual continuam pendentes.
 - O fluxo exige autenticação e associação a um workspace; como a conta proprietária ainda não foi configurada, a gravação real não foi executada.
+
+### Restrição do acesso ao proprietário
+- A tela `/acesso` agora oferece somente login; o auto cadastro foi removido da interface.
+- O middleware e o callback verificam o e-mail autenticado contra a variável server-side `ARCANY_OWNER_EMAIL`; sem a variável, o acesso interno falha fechado.
+- O callback deixou de criar organizações automaticamente.
+- A função `public.bootstrap_organization(text)` teve EXECUTE revogado para PUBLIC, anon e authenticated. A verificação SQL confirmou que anon e authenticated não conseguem mais executá-la.
+- Ainda falta definir a variável `ARCANY_OWNER_EMAIL`, criar/convidar a conta proprietária no Supabase Auth, provisionar a organização inicial e desabilitar signup no painel Auth do Supabase.
+- A consulta confirmou zero usuários, zero organizações e zero memberships no Supabase Arcany. Nenhuma conta ou empresa foi criada.
