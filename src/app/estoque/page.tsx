@@ -33,7 +33,7 @@ export default function StockPage() {
     if (!supabase) { setConfigured(false); return; }
     const { data: userData, error: authError } = await supabase.auth.getUser();
     if (authError || !userData.user) { setMessage("Entre na sua conta para acessar o estoque."); return; }
-    const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+    const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).maybeSingle();
     if (memberError) { setMessage(memberError.message); return; }
     if (!membership) { setMessage("Sua conta ainda não está vinculada a uma organização. Acesse Conta para concluir o cadastro."); return; }
     const { data: products, error: productError } = await supabase.from("products").select("id,name,sku,category,unit,sale_price,min_stock").eq("organization_id", membership.organization_id).eq("active", true).order("name");
@@ -56,7 +56,7 @@ export default function StockPage() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Faça login antes de cadastrar produtos.");
-      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).maybeSingle();
       if (memberError) throw memberError;
       if (!membership) throw new Error("Organização não encontrada. Entre novamente na plataforma.");
       const { data: product, error } = await supabase.from("products").insert({ organization_id: membership.organization_id, name: name.trim(), sku: sku.trim() || null, category: category.trim() || null, unit, sale_price: Number(price) || 0, min_stock: Number(minimum) || 0 }).select("id").single();
@@ -84,7 +84,7 @@ export default function StockPage() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Faça login antes de movimentar o estoque.");
-      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      const { data: membership, error: memberError } = await supabase.from("organization_members").select("organization_id").eq("user_id", userData.user.id).maybeSingle();
       if (memberError) throw memberError;
       if (!membership) throw new Error("Organização não encontrada.");
       const { error } = await supabase.from("stock_movements").insert({ organization_id: membership.organization_id, product_id: product.id, movement_type: movementType, quantity: amount, notes: movementNotes.trim() || null, created_by: userData.user.id });

@@ -1,42 +1,93 @@
-# Arcany Digital — status de implementação
+# Status de implementação da Arcany Digital
 
-Atualizado em 31/10/2026.
+Atualizado em 14/11/2026.
 
-## Implementado no repositório
+## Modelo do produto
 
-- Cliente de navegador Supabase e tela de acesso/cadastro.
-- Prospecção por cidade, UF e segmento usando Google Places, com filtro de site listado e carregamento paginado de resultados.
-- Criação automática da organização no primeiro acesso autenticado.
-- Controle de estoque com cadastro de produtos, saldo inicial e movimentações de entrada, saída, perda e devolução.
-- Financeiro com lançamentos de receitas/despesas, vencimento e status.
-- CRM com leitura do banco por organização, atualização de etapas e importação inicial dos leads locais quando a base remota está vazia.
-- Leads com ação manual de sincronização para a organização autenticada.
-- Criador de projetos para site, cardápio e loja, com configuração de identidade e produtos.
-- Vitrines públicas em `/loja/[slug]`, com carrinho e envio de pedido.
-- Endpoint servidor de pedidos: valida produtos e quantidades e recalcula os preços usando a configuração publicada, sem confiar no total enviado pelo navegador.
-- Painel de pedidos com atualização de status e pagamento.
-- Migrações SQL iniciais e de vitrines públicas, com RLS e privilégios explícitos.
-- Documentação de ativação do Supabase e variáveis necessárias.
+A Arcany Digital é o workspace privado de uma única agência, operado pelo proprietário. Empresas e clientes são registros comerciais e projetos atendidos, não usuários da plataforma.
 
-## Validação
+## Ambiente
 
-- A compilação de produção do commit `027b11d2` passou no GitHub Actions.
-- A compilação do criador de projetos e da vitrine pública também passou em commits anteriores.
-- O GitHub Actions confirmou sucesso para a compilação do commit `69db22e9` e para os módulos de pedidos, estoque e navegação.
-- A paginação da prospecção foi adicionada nos commits `7cbb5f1c` e `783467e5`; as respectivas execuções devem ser consultadas antes de considerar essa atualização validada.
+- Repositório: `wchagas73-lang/arcany-digital-`.
+- Branch de integração: `feat/supabase-auth-protection`.
+- PR: [#1, em rascunho](https://github.com/wchagas73-lang/arcany-digital-/pull/1).
+- Commit de aplicação validado: `9d3a245136e89474f88bf573aafbd1fe3e5b1937`.
+- Supabase exclusivo da Arcany: `kiwhtyuqgvcczwtafzcn`.
+- As alterações continuam na branch de integração; não foram mescladas em `main` nem publicadas em produção.
+- O Supabase do Açougue Bom Jardim não foi acessado nem alterado.
 
-## Dependências externas que não podem ser concluídas só pelo repositório
+## Implementado na branch
 
-1. Executar as duas migrações SQL no projeto Supabase.
-2. Configurar na Vercel `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (esta última somente no servidor).
-3. Configurar a chave Google Places no servidor para a prospecção.
-4. Fazer o deploy na Vercel e validar a URL de produção.
-5. Configurar um provedor de pagamento para Pix/cartão; atualmente o fluxo registra pedido e direciona a conversa para o WhatsApp, sem cobrar online.
-6. Configurar domínio próprio e publicação independente para cada cliente; as vitrines atuais são hospedadas no domínio Arcany.
-7. Integrar baixa automática de estoque com pedidos e testar segurança com usuários de organizações diferentes.
-8. Implementar e validar cobrança online, webhooks de pagamento, reembolsos e conciliação, caso a Arcany vá receber pagamentos dentro da plataforma.
-9. Configurar monitoramento, limites de uso e alertas para as APIs externas, além de política de privacidade e termos de uso.
+### Administração, comercial e produção
 
-## Critério de conclusão
+- Painel administrativo e navegação do workspace.
+- Biblioteca de modelos por nicho e tipo de solução.
+- Briefing e cadastro de projetos.
+- Fluxo de produção, revisão, aprovação, publicação e entrega.
+- Upload de logos, fotos, vídeos MP4 e PDFs em bucket privado, com limite de 25 MB.
+- Editor de landing page e publicação em `/p/[slug]`.
+- Mídias só são copiadas para o bucket público quando o proprietário publica explicitamente.
 
-Não declarar a plataforma 100% pronta até que as migrações estejam aplicadas, as variáveis configuradas, o deploy validado e os fluxos de autenticação, isolamento multiempresa, criação/publicação de vitrine, pedido público, gestão de pedidos, estoque, CRM e financeiro sejam testados em produção.
+### Autenticação e segurança
+
+- Cliente Supabase no navegador e no servidor com `@supabase/ssr`.
+- Middleware e callback com validação server-side do proprietário.
+- Primeiro acesso restrito ao e-mail proprietário autorizado.
+- Trigger de Auth cria/reutiliza a organização Arcany e associa o proprietário como `owner`.
+- `public.bootstrap_organization(text)` não é chamado pelo cliente e tem EXECUTE revogado para `PUBLIC`, `anon` e `authenticated`.
+- RLS habilitado em todas as 17 tabelas públicas.
+- Advisor de segurança do projeto Arcany retornou zero findings na última consulta.
+- A chave service-role não aparece na configuração pública do projeto nem nos resultados de busca do código do branch.
+
+### Empresas e leads
+
+- Permanecem no armazenamento local por conta, com chaves separadas por usuário.
+- Há sincronização manual e aditiva para as tabelas `companies` e `leads`.
+- O botão Backup JSON exporta chaves antigas e atuais sem enviar ou apagar dados.
+- O CRM não migra automaticamente dados locais para a nuvem.
+- A migração definitiva ainda não foi executada.
+
+## Estado confirmado no Supabase Arcany
+
+Histórico: 9 migrações aplicadas, incluindo schema inicial, endurecimento de privilégios/RLS, arquivos privados, publicações e provisionamento restrito do proprietário.
+
+- Tabelas públicas: 17.
+- Tabelas com RLS: 17.
+- Usuários Auth: 0.
+- Organizações: 0.
+- Associações em `organization_members`: 0.
+- Empresas: 0.
+- Leads: 0.
+- Advisor de segurança: zero findings.
+- Bucket `arcany-client-assets`: privado.
+- Bucket `arcany-published-media`: público para mídias aprovadas.
+
+A estrutura e o trigger foram inspecionados, mas ainda não existe uma conta real para validar o fluxo de ponta a ponta.
+
+## Validação automatizada
+
+No GitHub Actions, execução do commit `9d3a245136e89474f88bf573aafbd1fe3e5b1937` concluída com sucesso:
+
+- Instalação de dependências e geração do lockfile.
+- Auditoria de vulnerabilidades.
+- Testes automatizados de provisionamento, proteção e laboratório.
+- Build de produção.
+- ESLint.
+
+A aprovação do CI não comprova login real, upload, publicação ou isolamento funcional em navegador.
+
+## Pendências e próximo passo
+
+1. Configurar no ambiente de implantação `NEXT_PUBLIC_SUPABASE_URL`, chave publicável/anon e `ARCANY_OWNER_EMAIL`.
+2. Conferir no Supabase Auth a URL base, redirect `/auth/callback` e a configuração global de signups.
+3. Executar o primeiro acesso do proprietário e confirmar o e-mail.
+4. Confirmar que o trigger criou exatamente uma organização e uma associação `owner`.
+5. Testar login, sessão, logout, CRUD de projetos, upload/download/exclusão e publicação.
+6. Testar o backup JSON em aparelho real.
+7. Só então concluir a reconciliação de empresas e leads, preservando `localStorage`.
+
+A conta Auth ainda não existe. Essa etapa depende do primeiro acesso e da confirmação de e-mail pelo proprietário. Não criar senha nem simular uma conta em nome do usuário.
+
+## Migrações não autorizadas
+
+Não aplicar novamente `initial_saas_schema`. Não aplicar `202610310002_public_storefronts.sql`, `20261107210000_public_storefronts.sql` ou a migração duplicada `20261114170000_project_assets_private_storage.sql` sem necessidade demonstrada e autorização específica.

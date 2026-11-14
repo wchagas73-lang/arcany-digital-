@@ -3,17 +3,20 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/app-shell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
+import { LocalBackupButton } from "@/components/local-backup-button";
 import { Plus, Search, Phone, MessageCircle, Pencil, Trash2, Download, CloudUpload } from "lucide-react";
 
 type Stage = "novo" | "contato" | "proposta" | "negociacao" | "cliente" | "perdido";
 type Lead = { id: string; company: string; contact: string; phone: string; segment: string; interest: string; stage: Stage; followUp: string; notes: string };
 const stages: Record<Stage, string> = { novo: "Novo lead", contato: "Contato realizado", proposta: "Proposta enviada", negociacao: "Em negociação", cliente: "Cliente fechado", perdido: "Não avançou" };
-const key = "arcany-leads-v1";
+const STORAGE_KEY = "arcany-leads-v1";
 const blank = { company: "", contact: "", phone: "", segment: "", interest: "", stage: "novo" as Stage, followUp: "", notes: "" };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [ready, setReady] = useState(false);
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [form, setForm] = useState(blank);
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -23,13 +26,25 @@ export default function LeadsPage() {
   const [syncMessage, setSyncMessage] = useState("");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(key);
-      if (saved) setLeads(JSON.parse(saved) as Lead[]);
-    } catch { /* Mantém a tela utilizável se houver dados locais inválidos. */ }
-    setReady(true);
+    let active = true;
+    async function loadAccountData() {
+      const scopedKey = await getAccountScopedStorageKey(STORAGE_KEY);
+      if (!active) return;
+      setStorageKey(scopedKey);
+      if (scopedKey) {
+        try {
+          const saved = localStorage.getItem(scopedKey);
+          if (saved) setLeads(JSON.parse(saved) as Lead[]);
+        } catch { /* Mantém a tela utilizável se houver dados locais inválidos. */ }
+      }
+      setReady(true);
+    }
+    void loadAccountData();
+    return () => { active = false; };
   }, []);
-  useEffect(() => { if (ready) localStorage.setItem(key, JSON.stringify(leads)); }, [leads, ready]);
+  useEffect(() => {
+    if (ready && storageKey) localStorage.setItem(storageKey, JSON.stringify(leads));
+  }, [leads, ready, storageKey]);
 
   const visible = useMemo(() => leads.filter((lead) => {
     const text = [lead.company, lead.contact, lead.phone, lead.segment, lead.interest].join(" ").toLowerCase();
@@ -47,15 +62,28 @@ export default function LeadsPage() {
     if (!db) { setSyncMessage("Configure o Supabase na Vercel para sincronizar."); return; }
     setSyncing(true); setSyncMessage("");
     try {
-      const { data: userData } = await db.auth.getUser();
+      const { data: userData, error: userError } = await db.auth.getUser();
+      if (userError) throw userError;
       if (!userData.user) throw new Error("Entre na sua conta antes de sincronizar.");
-      const { data: membership, error: memberError } = await db.from("organization_members").select("organization_id").eq("user_id", userData.user.id).limit(1).maybeSingle();
+      const { data: membership, error: memberError } = await db.from("organization_members").select("organization_id").eq("user_id", userData.user.id).maybeSingle();
       if (memberError) throw memberError;
       if (!membership) throw new Error("Organização não encontrada. Acesse Conta e conclua o cadastro.");
       const { data: existing, error: existingError } = await db.from("leads").select("company_name,phone").eq("organization_id", membership.organization_id);
       if (existingError) throw existingError;
-      const keys = new Set((existing || []).map((x: {company_name:string;phone:string|null}) => x.company_name.toLowerCase().trim()+"|"+(x.phone||"").replace(/\D/g,"")));
-      const pending = leads.filter(l => !keys.has(l.company.toLowerCase().trim()+"|"+l.phone.replace(/\D/g,"")));
+      const makeKey = (company: string, phone: string | null) =>
+        company.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() +
+        "|" + (phone || "").replace(/\D/g, "");
+      const keys = new Set(
+        (existing || []).map((item: { company_name: string; phone: string | null }) =>
+          makeKey(item.company_name, item.phone)
+        )
+      );
+      const pending = leads.filter((lead) => {
+        const key = makeKey(lead.company, lead.phone);
+        if (keys.has(key)) return false;
+        keys.add(key);
+        return true;
+      });
       if (!pending.length) { setSyncMessage("Seus leads já estão sincronizados. Nenhum registro duplicado foi criado."); return; }
       const payload = pending.map(l => ({ organization_id: membership.organization_id, company_name: l.company, contact_name: l.contact || null, phone: l.phone || null, segment: l.segment || null, interest: l.interest || null, stage: l.stage, follow_up_at: l.followUp || null, notes: l.notes || null }));
       const { error } = await db.from("leads").insert(payload);
@@ -88,7 +116,7 @@ export default function LeadsPage() {
     <div className="stat-grid" style={{ marginTop: 22 }}>{metrics.map(([name, value]) => <div className="panel stat-card" key={name}><div className="stat-label">{name}</div><div className="stat-value">{value}</div></div>)}</div>
     <section className="panel" style={{ marginTop: 16 }}>
       <div className="panel-heading" style={{ flexWrap: "wrap" }}><div><div className="panel-title">Carteira de oportunidades</div><div className="panel-subtitle">{ready ? leads.length + " lead(s) salvos neste navegador" : "Carregando..."}</div></div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="secondary-button" type="button" onClick={syncToCloud} disabled={!leads.length || syncing}><CloudUpload size={13}/> {syncing ? "Sincronizando..." : "Sincronizar nuvem"}</button><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><LocalBackupButton/><button className="secondary-button" type="button" onClick={syncToCloud} disabled={!leads.length || syncing}><CloudUpload size={13}/> {syncing ? "Sincronizando..." : "Sincronizar nuvem"}</button><button className="secondary-button" type="button" onClick={exportCsv} disabled={!leads.length}><Download size={13}/> Exportar CSV</button><button className="action-button" type="button" onClick={() => { setForm(blank); setEditing(null); setShowForm(!showForm); }}><Plus size={14}/> Novo lead</button></div>
       </div>
       {syncMessage && <p role="status" style={{padding:"0 16px",fontSize:11,color:"#e9c77b"}}>{syncMessage}</p>}
       {showForm && <form onSubmit={save} style={{ margin: 16, padding: 15, border: "1px solid rgba(139,124,255,.28)", borderRadius: 12, display: "grid", gap: 11 }}>

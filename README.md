@@ -1,21 +1,49 @@
 # Arcany Digital
 
-Plataforma SaaS para prospecção comercial, análise de presença digital, organização de empresas e leads, CRM e criação de demonstrações de sites.
+A Arcany Digital é o workspace privado de operação de uma agência digital, usado pelo proprietário para prospectar empresas, organizar oportunidades, preparar propostas, produzir soluções digitais e acompanhar entregas.
 
-## Estado do projeto
+Empresas prospectadas e clientes contratantes são registros comerciais e projetos atendidos. Eles não recebem contas nem acesso administrativo à Arcany.
 
-Esta é a fundação inicial da aplicação. O painel e a navegação estão preparados; buscas reais de empresas, integrações com provedores, autenticação e persistência em banco de dados serão implementadas nas próximas etapas. Nenhum lead ou indicador fictício é apresentado como dado real.
+## Modelo operacional
+
+- Uma conta administrativa do proprietário.
+- Cadastro de empresas, contatos e leads na carteira comercial.
+- Diagnóstico de presença digital, preparação de propostas e acompanhamento de negociações.
+- Projetos com briefing, escopo, etapas, arquivos, links, publicação e entrega.
+- Modelos de sites, catálogos, cardápios, lojas e sistemas operacionais para acelerar a produção.
+- Sem autoatendimento ou login de clientes finais nesta arquitetura.
+
+## Segurança e dados
+
+O workspace usa Supabase Auth, PostgreSQL, Row Level Security (RLS), middleware e callback com validação server-side do proprietário. O banco provisiona a organização Arcany por um trigger restrito no cadastro da conta autorizada.
+
+A aplicação não chama `public.bootstrap_organization` no navegador. A função antiga está bloqueada para `PUBLIC`, `anon` e `authenticated`.
+
+Chaves privilegiadas nunca devem ser colocadas em variáveis `NEXT_PUBLIC_`, no navegador ou no repositório. O fluxo atual não requer `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## Tecnologias
 
-- Next.js (App Router)
-- React e TypeScript
-- Tailwind CSS
-- Lucide React
+- Next.js 15 (App Router)
+- React 19 e TypeScript
+- Supabase Auth, PostgreSQL e RLS
+- `@supabase/ssr` para sessão por cookies
+- Tailwind CSS e Lucide React
+- Google Places API opcional para prospecção, com chave somente no servidor
 
-## Executar localmente
+## Configuração
 
-Requer Node.js 20.9 ou superior.
+Configure no ambiente de implantação:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ou `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `ARCANY_OWNER_EMAIL`
+- `GOOGLE_PLACES_API_KEY`, se a prospecção real via Google Places for utilizada
+
+A chave publicável/anon é própria para o cliente. As políticas RLS continuam obrigatórias.
+
+## Desenvolvimento
+
+Requer Node.js 22 ou superior.
 
 ```bash
 npm install
@@ -24,15 +52,12 @@ npm run dev
 
 Abra http://localhost:3000.
 
-## Publicar na Vercel
+## Validação
 
-1. Importe este repositório no painel da Vercel.
-2. Mantenha o framework como Next.js.
-3. Use os comandos padrão de instalação e build.
-4. Clique em Deploy.
+O GitHub Actions executa auditoria de dependências, testes automatizados, build de produção e lint. A conclusão do CI não substitui o teste real do primeiro acesso, confirmação de e-mail, login, operações com arquivos e publicação.
 
-Não há variáveis de ambiente obrigatórias nesta primeira fase.
+## Banco de dados
 
-## Próximas etapas
+Consulte [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) para o histórico aplicado, variáveis, regras de segurança e migrações que não devem ser executadas sem revisão.
 
-Consulte [docs/ROADMAP.md](docs/ROADMAP.md).
+Consulte [docs/ROADMAP.md](docs/ROADMAP.md) para o plano de evolução.
