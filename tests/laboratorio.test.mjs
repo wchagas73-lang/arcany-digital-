@@ -30,6 +30,6 @@ test("prospecting demo mode works without Google Places credentials", async () =
   assert.match(route, /body\.demoMode === true/);
   assert.match(route, /source: "Arcany Demo"/);
   assert.match(route, /Dados inteiramente fictícios/);
-  assert.match(page, /setDemoMode\(true\)/);
+  assert.match(page, /useState\(true\)/);
   assert.match(page, /demoMode/);
 });
