@@ -119,6 +119,7 @@ export default function ProjectProductionPage(){
       <div className="eyebrow">Centro de produção e entrega</div>
       <h1 className="page-title">{project.name}</h1>
       <p className="page-description">{project.solution_type} · Criado em {new Date(project.created_at).toLocaleDateString("pt-BR")}</p>
+      <Link href={"/projetos/" + project.id + "/pagina"} className="action-button" style={{display:"inline-flex",marginTop:10}}><ExternalLink size={13}/> Montar landing page</Link>
       <div className="section-grid" style={{gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",marginTop:18,alignItems:"start"}}>
         <section className="panel" style={panel}>
           <h2 style={{fontSize:14,margin:0}}>Fluxo de produção</h2>
