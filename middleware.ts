@@ -12,7 +12,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/acesso/") ||
     pathname === "/auth/callback" ||
     pathname.startsWith("/auth/callback/") ||
-    pathname.startsWith("/loja/");
+    pathname.startsWith("/loja/") ||
+    pathname.startsWith("/p/");
 
   if (!url || !key) {
     if (isPublicRoute) return response;
