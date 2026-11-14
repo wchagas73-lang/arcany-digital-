@@ -158,7 +158,7 @@ export default function LandingPageBuilder() {
   }
 
   const publicUrl = typeof window !== "undefined" && slug ? window.location.origin + "/p/" + slug : "";
-  const input = (key: keyof PageContent, value: string) => update(key, value);
+  const input = (key: Exclude<keyof PageContent, "gallery">, value: string) => update(key, value);
 
   return <AppShell><div className="content">
     <Link href={"/projetos/" + projectId} style={{ display: "inline-flex", gap: 7, alignItems: "center", color: "#b9adff", fontSize: 11, textDecoration: "none", marginBottom: 14 }}><ArrowLeft size={14}/> Voltar ao projeto</Link>
