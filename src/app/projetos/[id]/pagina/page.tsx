@@ -20,6 +20,8 @@ type PageContent = {
   servicesText: string;
   heroImage: string;
   gallery: string[];
+  publishedAssetIds?: string[];
+  publishedAssetPaths?: string[];
 };
 type Asset = { id: string; file_path: string; file_name: string; mime_type: string };
 type Project = { id: string; name: string; solution_type: string; brief: Record<string, unknown> };
@@ -37,6 +39,7 @@ export default function LandingPageBuilder() {
   const [project, setProject] = useState<Project | null>(null);
   const [organizationId, setOrganizationId] = useState("");
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
   const [content, setContent] = useState<PageContent>(emptyContent);
   const [slug, setSlug] = useState("");
   const [published, setPublished] = useState(false);
@@ -82,6 +85,7 @@ export default function LandingPageBuilder() {
         setContent({ ...emptyContent, ...(pub.content as PageContent) });
         setPublished(pub.published);
         setPublishedAt(pub.published_at);
+        setSelectedAssetIds(pub.content.publishedAssetIds || []);
       } else {
         setSlug(slugify(p.name) + "-" + p.id.slice(0, 6));
       }
@@ -134,18 +138,25 @@ export default function LandingPageBuilder() {
     if (!db || !project || !organizationId) return;
     setPublishing(true); setMessage("");
     try {
-      const images = assets.filter(asset => asset.mime_type.startsWith("image/"));
+      const images = assets.filter(asset => asset.mime_type.startsWith("image/") && selectedAssetIds.includes(asset.id));
+      const previousPaths = content.publishedAssetPaths || [];
+      if (previousPaths.length) {
+        const { error: cleanupError } = await db.storage.from("arcany-published-media").remove(previousPaths);
+        if (cleanupError) throw cleanupError;
+      }
       const gallery: string[] = [];
+      const publishedAssetPaths: string[] = [];
       for (const asset of images) {
         const { data: file, error: downloadError } = await db.storage.from("arcany-client-assets").download(asset.file_path);
         if (downloadError) throw downloadError;
         const extension = asset.file_name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-        const path = organizationId + "/" + project.id + "/" + crypto.randomUUID() + "." + extension;
-        const { error: uploadError } = await db.storage.from("arcany-published-media").upload(path, file, { contentType: asset.mime_type, upsert: false });
+        const path = organizationId + "/" + project.id + "/" + asset.id + "." + extension;
+        const { error: uploadError } = await db.storage.from("arcany-published-media").upload(path, file, { contentType: asset.mime_type, upsert: true });
         if (uploadError) throw uploadError;
         gallery.push(db.storage.from("arcany-published-media").getPublicUrl(path).data.publicUrl);
+        publishedAssetPaths.push(path);
       }
-      const nextContent = { ...content, gallery, heroImage: gallery[0] || content.heroImage };
+      const nextContent = { ...content, gallery, heroImage: gallery[0] || content.heroImage, publishedAssetIds: selectedAssetIds, publishedAssetPaths };
       const cleanSlug = await savePublication(nextContent, true, gallery);
       const publicUrl = window.location.origin + "/p/" + cleanSlug;
       const { error: projectUpdateError } = await db.from("projects").update({ status: "publicado", published_url: publicUrl }).eq("id", project.id).eq("organization_id", organizationId);
@@ -206,7 +217,8 @@ export default function LandingPageBuilder() {
           </div>
           <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 12 }}>
             <div style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 11 }}><ImagePlus size={14} color="#a99fff"/> Materiais disponíveis</div>
-            <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.5, margin: "6px 0 0" }}>{assets.filter(asset => asset.mime_type.startsWith("image/")).length} imagem(ns) anexada(s). Todas serão incluídas na galeria pública ao publicar.</p>
+            <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.5, margin: "6px 0 0" }}>{assets.filter(asset => asset.mime_type.startsWith("image/")).length} imagem(ns) anexada(s). Marque apenas as imagens autorizadas para aparecer publicamente.</p>
+            {assets.filter(asset => asset.mime_type.startsWith("image/")).map(asset => <label key={asset.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "#c8d1df", padding: "6px 0" }}><input type="checkbox" checked={selectedAssetIds.includes(asset.id)} onChange={e => setSelectedAssetIds(current => e.target.checked ? [...current, asset.id] : current.filter(id => id !== asset.id))}/><span>{asset.file_name}</span></label>)}
             {assets.length === 0 && <Link href={"/projetos/" + projectId} className="secondary-button" style={{ marginTop: 9 }}>Anexar fotos e logo</Link>}
           </div>
           {publishedAt && <p style={{ color: "var(--muted)", fontSize: 9, margin: 0 }}>Publicado em {new Date(publishedAt).toLocaleString("pt-BR")}</p>}
