@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus, Minus } from "lucide-react";
@@ -127,6 +128,7 @@ export default function SolucoesPage() {
         <div className="eyebrow">Produção digital</div>
         <h1 className="page-title">Central de soluções</h1>
         <p className="page-description">Prepare o projeto e veja uma prévia visual personalizada enquanto preenche os dados do cliente.</p>
+        <div style={{ marginTop: 13 }}><Link href="/modelos" className="action-button" style={{ display: "inline-flex", textDecoration: "none" }}><Sparkles size={14} /> Abrir biblioteca de modelos</Link></div>
 
         <section className="panel" style={{ marginTop: 22, padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
