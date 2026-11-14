@@ -66,9 +66,11 @@ Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenti
 
 ## Fase 7 — Fábrica de soluções digitais
 - [x] Central inicial para selecionar serviços e preparar briefings.
-- [x] Tipos de solução: sites, catálogos, e-commerce, automações, CRM, estoque, financeiro e dashboards como entregáveis.
-- [ ] Gerador de projetos com modelos por segmento.
-- [ ] Pré-visualização e demonstrações reutilizáveis.
+- [x] Catálogo inicial versionado com modelos por nicho e tipo de solução, filtros e prompts-base copiáveis.
+- [x] Cobertura inicial de pet, beleza, moda, calçados, varejo, alimentação, açougue, saúde, automotivo, imobiliário, serviços e B2B.
+- [ ] Gerador de projetos com modelos por segmento e configuração por cliente.
+- [ ] Editor/configurador de modelos com identidade visual, conteúdo, imagens, catálogo e regras específicas.
+- [ ] Pré-visualização real e demonstrações reutilizáveis.
 - [ ] Briefing, escopo, checklist, prazos e etapas de produção.
 - [ ] Gestão de publicação, domínio e entrega ao cliente.
 - [ ] Biblioteca de componentes e modelos reaproveitáveis.
