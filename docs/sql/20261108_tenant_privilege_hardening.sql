@@ -36,7 +36,7 @@ alter default privileges for role postgres in schema public
 alter default privileges for role supabase_admin in schema public
   revoke all on tables from anon;
 alter default privileges for role supabase_admin in schema public
-  revoke truncate, references, trigger on tables from authenticated;
+  revoke truncate, references, trigger, maintain on tables from authenticated;
 alter default privileges for role supabase_admin in schema public
   grant select, insert, update, delete on tables to authenticated;
 alter default privileges for role supabase_admin in schema public
