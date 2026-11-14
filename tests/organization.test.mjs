@@ -30,13 +30,14 @@ test("self-service organization bootstrap is revoked for public roles", async ()
 });
 
 
+
 test("owner signup trigger rejects every email outside the owner allowlist", async () => {
   const migration = await read("../supabase/migrations/20261114154710_owner_only_auth_signup_provisioning.sql");
-  assert.match(migration, /lower\\(coalesce\\(new\\.email, ''\\)\\) <> 'wchagas73@gmail\\.com'/);
+  assert.ok(migration.includes("lower(coalesce(new.email, '')) <> 'wchagas73@gmail.com'"));
   assert.match(migration, /raise exception/i);
-  assert.match(migration, /insert into public\\.organization_members/i);
+  assert.ok(migration.includes("insert into public.organization_members"));
   assert.match(migration, /security definer/i);
-  assert.match(migration, /set search_path = ''/i);
+  assert.ok(migration.includes("set search_path = ''"));
 });
 
 test("published landing pages are public only after explicit publication", async () => {
@@ -44,9 +45,9 @@ test("published landing pages are public only after explicit publication", async
   const builder = await read("../src/app/projetos/[id]/pagina/page.tsx");
   const publicPage = await read("../src/app/p/[slug]/page.tsx");
   const migration = await read("../supabase/migrations/20261114154420_project_publications_and_public_media.sql");
-  assert.match(middleware, /pathname\\.startsWith\\("\\/p\\/"\\)/);
-  assert.match(builder, /project_publications/);
-  assert.match(builder, /published: nextPublished/);
-  assert.match(publicPage, /\\.eq\\("published", true\\)/);
-  assert.match(migration, /using \\(published = true\\)/i);
+  assert.ok(middleware.includes('pathname.startsWith("/p/")'));
+  assert.ok(builder.includes("project_publications"));
+  assert.ok(builder.includes("published: nextPublished"));
+  assert.ok(publicPage.includes('.eq("published", true)'));
+  assert.ok(migration.includes("using (published = true)"));
 });
