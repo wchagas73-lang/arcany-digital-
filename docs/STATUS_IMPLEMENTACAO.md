@@ -105,3 +105,21 @@ Essas verificações não substituem testes reais de autenticação, persistênc
 - O único Supabase autorizado para a Arcany é `kiwhtyuqgvcczwtafzcn`.
 - Não apagar dados, não criar dados fictícios e não reaplicar a migração inicial.
 - Não migrar dados locais sem backup verificável e plano de reconciliação.
+
+## Biblioteca de modelos e fábrica de soluções
+
+Implementado nesta atualização na branch de integração:
+- Nova rota privada `/modelos`, incluída no menu lateral.
+- Biblioteca inicial com modelos versionados no repositório, sem criar registros de empresas ou clientes.
+- Busca por texto e filtros por nicho e tipo.
+- Detalhamento de objetivo, estrutura recomendada e funcionalidades.
+- Prompt-base de produção copiável para cada modelo.
+- Segmentos iniciais: pet, beleza, moda, calçados, varejo, alimentação, açougue, saúde e bem-estar, automotivo, imobiliário, serviços profissionais, empresas B2B e multissetorial.
+- Tipos iniciais: landing page, site institucional, catálogo, vitrine, e-commerce, cardápio, agendamento, estoque, ordens de serviço e dashboard.
+
+Limites conhecidos:
+- A biblioteca atual é estática e versionada no Git. Ainda não possui CRUD de modelos nem persistência administrativa no Supabase.
+- O prompt-base acelera o briefing e a produção, mas não gera nem publica automaticamente o projeto.
+- O configurador visual, preview funcional, geração de repositório, provisionamento de hospedagem e publicação continuam pendentes.
+- Não declarar a fábrica de soluções completa até implementar e testar o fluxo de ponta a ponta.
+- Os modelos não devem usar dados fictícios como se fossem informações reais de clientes.
