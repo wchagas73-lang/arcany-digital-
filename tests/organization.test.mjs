@@ -22,6 +22,15 @@ test("auth callback applies the same owner-only allowlist", async () => {
   assert.match(callback, /await supabase\.auth\.signOut\(\)/);
 });
 
+test("owner signup delegates organization provisioning to the restricted Auth trigger", async () => {
+  const access = await read("../src/app/acesso/page.tsx");
+  const migration = await read("../supabase/migrations/20261114154710_owner_only_auth_signup_provisioning.sql");
+  assert.match(access, /supabase\.auth\.signUp/);
+  assert.doesNotMatch(access, /\.rpc\s*\(\s*["']bootstrap_organization/);
+  assert.match(migration, /create trigger arcany_owner_signup_guard/i);
+  assert.match(migration, /insert into public\.organization_members/i);
+});
+
 test("self-service organization bootstrap is revoked for public roles", async () => {
   const migration = await read("../supabase/migrations/20261114150346_revoke_public_workspace_bootstrap.sql");
   assert.match(migration, /revoke all on function public\.bootstrap_organization\(text\) from public/i);
@@ -29,7 +38,13 @@ test("self-service organization bootstrap is revoked for public roles", async ()
   assert.match(migration, /revoke all on function public\.bootstrap_organization\(text\) from authenticated/i);
 });
 
-
+test("browser Supabase client never reads a service-role secret", async () => {
+  const client = await read("../src/lib/supabase/client.ts");
+  const env = await read("../.env.example");
+  assert.match(client, /NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);
+  assert.doesNotMatch(client, /SERVICE_ROLE|service_role/i);
+  assert.doesNotMatch(env, /SUPABASE_SERVICE_ROLE_KEY/i);
+});
 
 test("owner signup trigger rejects every email outside the owner allowlist", async () => {
   const migration = await read("../supabase/migrations/20261114154710_owner_only_auth_signup_provisioning.sql");
