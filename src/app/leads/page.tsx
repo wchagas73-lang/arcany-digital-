@@ -70,8 +70,20 @@ export default function LeadsPage() {
       if (!membership) throw new Error("Organização não encontrada. Acesse Conta e conclua o cadastro.");
       const { data: existing, error: existingError } = await db.from("leads").select("company_name,phone").eq("organization_id", membership.organization_id);
       if (existingError) throw existingError;
-      const keys = new Set((existing || []).map((x: {company_name:string;phone:string|null}) => x.company_name.toLowerCase().trim()+"|"+(x.phone||"").replace(/\D/g,"")));
-      const pending = leads.filter(l => !keys.has(l.company.toLowerCase().trim()+"|"+l.phone.replace(/\D/g,"")));
+      const makeKey = (company: string, phone: string | null) =>
+        company.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() +
+        "|" + (phone || "").replace(/\D/g, "");
+      const keys = new Set(
+        (existing || []).map((item: { company_name: string; phone: string | null }) =>
+          makeKey(item.company_name, item.phone)
+        )
+      );
+      const pending = leads.filter((lead) => {
+        const key = makeKey(lead.company, lead.phone);
+        if (keys.has(key)) return false;
+        keys.add(key);
+        return true;
+      });
       if (!pending.length) { setSyncMessage("Seus leads já estão sincronizados. Nenhum registro duplicado foi criado."); return; }
       const payload = pending.map(l => ({ organization_id: membership.organization_id, company_name: l.company, contact_name: l.contact || null, phone: l.phone || null, segment: l.segment || null, interest: l.interest || null, stage: l.stage, follow_up_at: l.followUp || null, notes: l.notes || null }));
       const { error } = await db.from("leads").insert(payload);
