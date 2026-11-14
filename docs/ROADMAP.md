@@ -15,7 +15,7 @@ Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenti
 - [ ] Confirmar publicação e variáveis de ambiente no projeto Vercel principal `arcany-digital` (sem hífen).
 - [ ] Testar o fluxo completo no domínio publicado.
 
-## Fase 2 — Contas e segurança multi-tenant
+## Fase 2 — Acesso privado e segurança do workspace
 - [x] Supabase Auth com clientes SSR e sessão por cookies.
 - [x] Proteção das rotas privadas.
 - [x] Bootstrap de uma organização por conta.
@@ -24,7 +24,7 @@ Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenti
 - [x] Restringir permissões das funções SQL.
 - [x] Indexar chaves estrangeiras para reduzir gargalos de consulta.
 - [ ] Testar cadastro, confirmação de e-mail, login, logout e recuperação de acesso.
-- [ ] Testar isolamento com duas contas reais distintas.
+- [ ] Testar bloqueio de qualquer conta que não seja a proprietária autorizada.
 - [ ] Confirmar as URLs de redirecionamento e variáveis de ambiente na Vercel.
 - [ ] Gerar e versionar lockfile de dependências.
 
@@ -90,18 +90,18 @@ Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenti
 - [ ] Aprovação humana antes de enviar mensagens ou publicar conteúdo.
 - [ ] Limites de uso e custos por organização.
 
-## Fase 10 — Qualidade, planos e escala
+## Fase 10 — Qualidade, monitoramento e escala operacional
 - [ ] Testes automatizados de autenticação, RLS e fluxos comerciais.
 - [ ] Testes de isolamento com contas independentes.
 - [ ] Monitoramento, logs, backups e recuperação.
 - [ ] Lockfile versionado e auditoria contínua de dependências.
-- [ ] Planos, cobrança e limites de uso.
+- [ ] Indicadores de produtividade, rentabilidade e capacidade operacional da agência.
 - [ ] Documentação de operação e suporte.
 
 ## Princípios do produto
 - O assinante é o profissional que vende e desenvolve soluções digitais.
 - Os negócios prospectados são clientes do assinante, não usuários da Arcany por padrão.
-- Nenhum assinante pode visualizar dados de outro.
+- Somente a conta proprietária autorizada pode acessar o workspace e seus dados.
 - Não apresentar suposições como fatos confirmados.
 - Respeitar privacidade, termos das fontes de dados e legislação aplicável.
 - Nunca expor chaves privadas no navegador ou no repositório.
