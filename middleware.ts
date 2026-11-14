@@ -3,15 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
-
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const pathname = request.nextUrl.pathname;
-  // Storefronts must remain publicly accessible to customers; the dashboard
-  // and internal management routes continue to require an authenticated user.
+
   const isPublicRoute =
     pathname === "/acesso" ||
     pathname.startsWith("/acesso/") ||
@@ -20,9 +15,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/loja/");
 
   if (!url || !key) {
-    if (isPublicRoute) {
-      return response;
-    }
+    if (isPublicRoute) return response;
     const target = request.nextUrl.clone();
     target.pathname = "/acesso";
     target.searchParams.set("setup", "supabase");
@@ -31,29 +24,30 @@ export async function middleware(request: NextRequest) {
 
   const supabase = createServerClient(url, key, {
     cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
+      getAll() { return request.cookies.getAll(); },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
 
   const { data, error } = await supabase.auth.getUser();
+  const ownerEmail = process.env.ARCANY_OWNER_EMAIL?.trim().toLowerCase();
+  const userEmail = data.user?.email?.trim().toLowerCase();
+  const isAuthorizedOwner = Boolean(ownerEmail && userEmail && ownerEmail === userEmail);
 
-  if ((error || !data.user) && !isPublicRoute) {
+  if (!isPublicRoute && (error || !data.user || !isAuthorizedOwner)) {
+    if (data.user && !isAuthorizedOwner) {
+      await supabase.auth.signOut();
+    }
     const target = request.nextUrl.clone();
     target.pathname = "/acesso";
     target.search = "";
+    target.searchParams.set("erro", ownerEmail ? "acesso_restrito" : "proprietario_nao_configurado");
     const redirect = NextResponse.redirect(target);
-    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
     redirect.headers.set("Cache-Control", "private, no-store");
     return redirect;
   }
@@ -63,7 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
