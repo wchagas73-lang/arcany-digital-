@@ -94,7 +94,7 @@ Antes de tornar o banco a fonte principal:
 
 ## 6. Critérios de conclusão
 
-- [x] Build de produção, testes automatizados, lint e auditoria de dependências aprovados no commit de integração `2077fc061450c97558874a1f29bf14cc7414c701`.
+- [x] Build de produção, testes automatizados, lint e auditoria de dependências aprovados no commit de integração `9d3a245136e89474f88bf573aafbd1fe3e5b1937`.
 - [x] Middleware e callback com validação server-side do proprietário.
 - [x] Trigger de provisionamento e permissões de bootstrap revisados no projeto Arcany.
 - [x] RLS habilitado nas 17 tabelas públicas.
