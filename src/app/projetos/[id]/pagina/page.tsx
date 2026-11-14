@@ -156,7 +156,7 @@ export default function LandingPageBuilder() {
         gallery.push(db.storage.from("arcany-published-media").getPublicUrl(path).data.publicUrl);
         publishedAssetPaths.push(path);
       }
-      const nextContent = { ...content, gallery, heroImage: gallery[0] || content.heroImage, publishedAssetIds: selectedAssetIds, publishedAssetPaths };
+      const nextContent = { ...content, gallery, heroImage: gallery[0] || (previousPaths.length ? "" : content.heroImage), publishedAssetIds: selectedAssetIds, publishedAssetPaths };
       const cleanSlug = await savePublication(nextContent, true, gallery);
       const publicUrl = window.location.origin + "/p/" + cleanSlug;
       const { error: projectUpdateError } = await db.from("projects").update({ status: "publicado", published_url: publicUrl }).eq("id", project.id).eq("organization_id", organizationId);
