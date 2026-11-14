@@ -12,7 +12,7 @@ A Arcany Digital é a plataforma SaaS usada pelo profissional que prospecta empr
 - Branch de integração: `feat/supabase-auth-protection`.
 - Branch padrão: `main`.
 - A branch de integração está à frente da `main`, sem commits atrás, e existe uma PR em rascunho (#1). Não mesclar sem revisão do diff e dos efeitos nos módulos existentes.
-- A PR altera autenticação, armazenamento, navegação e módulos de negócio. Também remove a rota antiga `src/app/api/pedidos/route.ts` e, nesta branch, as páginas de estoque, financeiro e pedidos redirecionam para o dashboard. Esses três módulos precisam ser restaurados/revistos antes de considerar a plataforma completa.
+- A PR altera autenticação, armazenamento, navegação e módulos de negócio. Também remove a rota antiga `src/app/api/pedidos/route.ts`. Os módulos de estoque, financeiro e pedidos foram restaurados nesta etapa e voltaram ao menu, com consultas limitadas à organização autenticada. O recebimento público de pedidos ainda não está ativo porque a rota de API foi removida e a tabela `public_storefronts` não existe.
 - O fluxo de vitrine na branch de integração envia o pedido diretamente ao WhatsApp e informa que não armazena o pedido na Arcany.
 
 ## Autenticação e isolamento
