@@ -1,12 +1,13 @@
 # Segurança da Arcany Digital
 
-## Modelo de contas
+## Modelo de acesso
 
-- Cada assinante da Arcany é um profissional com sua própria conta e organização.
-- Empresas prospectadas, leads, diagnósticos, propostas e projetos pertencem à organização do profissional.
-- Os negócios prospectados não recebem contas Arcany por padrão.
-- As políticas RLS usam a associação entre `auth.uid()` e `organization_members` para isolar registros.
-- O fluxo atual da aplicação assume uma organização por usuário; a associação única precisa ser garantida também no banco.
+- A Arcany é uma ferramenta administrativa privada, usada somente pelo proprietário.
+- Não deve existir cadastro público, convite, área de login de clientes ou múltiplas organizações de assinantes.
+- Empresas, contatos e clientes atendidos são dados operacionais da agência, não identidades autenticáveis.
+- A autenticação deve usar uma conta administrativa autorizada por allowlist/controle de acesso no servidor, sem confiar em metadados editáveis pelo usuário.
+- RLS deve restringir os dados à conta proprietária. A estrutura organizacional atual pode ser mantida provisoriamente, mas o bootstrap aberto a qualquer usuário autenticado deve ser fechado quando o acesso de proprietário estiver implementado.
+- O código atual ainda permite cadastro público e não está conforme este modelo. Não declarar a migração de acesso concluída até restringir e testar esse fluxo.
 
 ## Banco de dados
 
