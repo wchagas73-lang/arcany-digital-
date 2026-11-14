@@ -1,74 +1,66 @@
-# Arcany Digital: status real de implementação
-
-Atualizado em 14/11/2026.
+# Status de implementação da Arcany Digital
 
 ## Modelo do produto
 
-A Arcany Digital é o workspace privado de uma única agência, operado pelo proprietário. Clientes e empresas prospectadas são registros de CRM e projetos, sem contas ou acesso administrativo à Arcany.
+A Arcany Digital é o workspace privado de uma única agência, operado pelo proprietário. Clientes e empresas prospectadas são registros comerciais e projetos, sem contas ou acesso administrativo à Arcany.
 
 ## Ambiente
 
-- Repositório: `wchagas73-lang/arcany-digital-`.
-- Branch de integração: `feat/supabase-auth-protection`.
-- Branch principal: `main`.
-- Supabase exclusivo da Arcany: `kiwhtyuqgvcczwtafzcn`.
-- Projeto Vercel: `arcany-digital`, ID `prj_jDvLrke7SJOL5nVaw12jaWCvjQ11`.
-- Não modificar o projeto Supabase do Açougue Bom Jardim (`tbpxqtwlmpifuazmzihe`).
-- As alterações desta etapa permanecem na branch de integração e não foram mescladas em main nem publicadas em produção.
+- Repositório: \`wchagas73-lang/arcany-digital-\`.
+- Branch de integração: \`feat/supabase-auth-protection\`.
+- Branch principal: \`main\`.
+- Supabase exclusivo da Arcany: \`kiwhtyuqgvcczwtafzcn\`.
+- Projeto Vercel: \`arcany-digital\`, ID \`prj_jDvLrke7SJOL5nVaw12jaWCvjQ11\`.
+- Não modificar o Supabase do Açougue Bom Jardim (\`tbpxqtwlmpifuazmzihe\`).
+- As alterações permanecem na branch de integração. Não foram mescladas em \`main\` nem publicadas em produção.
 
-## Implementado na branch de integração
+## Implementado na branch
 
-- Acesso por login, sem formulário público de cadastro.
-- Middleware e callback verificam o e-mail proprietário configurado no servidor.
-- Biblioteca inicial de modelos por nicho e tipo de solução.
-- Briefing personalizado com instruções para não inventar informações comerciais.
-- Cadastro de projetos na tabela `projects`, com briefing e configuração inicial.
-- Página de administração com indicadores do banco, status do workspace e atalhos operacionais.
-- Página de produção por projeto: acompanhamento de etapa, endereço de preview/publicação e dados confirmados do cliente.
-- Upload de logo, fotos, vídeos MP4 e PDFs por projeto, com limite de 25 MB por arquivo.
-- Arquivos em bucket privado `arcany-client-assets`, com políticas de acesso por organização.
-- Tabela `project_assets` com RLS habilitado.
-- RLS habilitado nas tabelas públicas já existentes; políticas de negócio usam associação à organização.
-- Função pública de bootstrap de organização teve execução revogada para PUBLIC, anon e authenticated.
-- Advisor de segurança do Supabase sem findings na verificação após a migração de arquivos.
+### Administrativo e comercial
+- Painel de administração com indicadores reais do banco e status de conexão/workspace.
+- Biblioteca de modelos por nicho e tipo de solução.
+- Briefing personalizado, com campos para identidade visual, materiais, regras e integrações.
+- Cadastro e listagem de projetos no workspace.
+- CRM e módulos comerciais existentes; empresas e leads ainda têm partes locais e sincronização manual, portanto não são cloud-first em todos os fluxos.
 
-## Limites ainda não resolvidos
+### Produção e entrega
+- Página de produção por projeto com etapas: planejamento, produção, revisão, aprovado, publicado, entregue e pausado.
+- Upload e gerenciamento de logos, fotos, vídeos MP4 e PDFs por projeto, limite de 25 MB.
+- Bucket privado \`arcany-client-assets\` e tabela \`project_assets\`, com RLS e políticas por organização.
+- Editor de landing page por projeto, com nome, título, descrição, cidade, WhatsApp, Instagram, link do Google, cor, serviços e endereço público.
+- Prévia de conteúdo no editor.
+- Publicação em rota compartilhável \`/p/[slug]\`.
+- Imagens privadas do projeto são copiadas para \`arcany-published-media\` somente quando o proprietário publica.
+- Conteúdo publicado é lido publicamente apenas quando \`published = true\`.
+- O link público fica registrado no projeto.
 
-- A conta proprietária `wchagas73@gmail.com` ainda não existe em `auth.users`. A consulta retornou zero usuários com esse e-mail.
-- A organização interna e a associação owner ainda não foram provisionadas.
-- Não há ferramenta administrativa de Auth disponível nesta integração para convidar/criar o usuário de forma segura. Não criar registros diretamente em `auth.users` por SQL.
-- A configuração de signup público do Supabase Auth precisa ser conferida e desabilitada no painel do projeto. A interface não oferece cadastro, mas isso isoladamente não desativa a API pública de signup.
-- Login real, CRUD com usuário autenticado e fluxo de recuperação de sessão ainda não foram testados.
-- Empresas e leads ainda usam armazenamento local com sincronização manual em telas existentes. Não considerar sincronização entre dispositivos automática.
-- A biblioteca de modelos é estática e versionada no Git.
-- Upload de materiais e gestão de etapas do projeto estão implementados, mas ainda precisam de teste funcional com a conta proprietária.
-- O editor visual completo, geração automática de aplicações/repositórios, provisionamento de hospedagem e publicação automática ainda não estão implementados.
-- Registrar uma URL no projeto não publica o site. Publicação depende de gerar/validar a aplicação do cliente e implantar no provedor escolhido.
-- Instagram, Google Business Profile, avaliações, Google Places e IA de análise ainda não estão integrados por completo.
-- O fluxo público de loja e pedidos não está pronto; a tabela `public_storefronts` não existe e a rota antiga não deve ser tratada como produção.
-- Não há dados de clientes, leads ou projetos fictícios criados no banco.
+### Segurança
+- Middleware e callback validam o e-mail proprietário no servidor.
+- O primeiro acesso é restrito ao e-mail \`wchagas73@gmail.com\`.
+- Trigger de Auth cria/reutiliza a organização interna e a associação owner somente para o e-mail permitido; qualquer outro e-mail é rejeitado.
+- \`public.bootstrap_organization(text)\` está com EXECUTE revogado para \`PUBLIC\`, \`anon\` e \`authenticated\`.
+- Advisor de segurança Supabase sem findings na última consulta.
+- Nenhum cliente, lead ou projeto fictício foi criado.
 
-## Segurança
+## Pendências reais
 
-- O middleware usa `ARCANY_OWNER_EMAIL` no servidor e falha fechado quando não configurado.
-- Não usar `SUPABASE_SERVICE_ROLE_KEY` no navegador.
-- A tabela `project_assets` e o bucket privado usam autorização vinculada à organização.
-- Arquivos aceitos: JPEG, PNG, WEBP, PDF e MP4.
-- Não inserir dados diretamente em `auth.users`.
-- Não habilitar signup público para este modelo de produto.
-- Não mesclar a PR nem publicar em produção antes de validar autenticação, políticas, upload, persistência e rotas.
+- A conta proprietária ainda não existe no Supabase Auth e a organização ainda não foi criada. O novo fluxo de primeiro acesso está preparado para criar ambos após confirmação do e-mail.
+- A lista de URLs permitidas no Supabase Auth precisa aceitar a origem da Arcany e \`/auth/callback\`, se confirmação de e-mail estiver ativa.
+- A configuração global de signups do Supabase Auth ainda precisa ser conferida no painel. O trigger do banco já bloqueia qualquer e-mail diferente do proprietário.
+- Login real, CRUD de projeto, upload/download/exclusão de arquivos e publicação real ainda precisam ser testados com a conta proprietária.
+- A geração automática por IA de aplicações e repositórios não está integrada. O editor atual produz uma landing page configurável e publicável, mas não é um editor visual drag-and-drop nem um gerador IA.
+- O domínio público usa a hospedagem da Arcany. Domínio próprio do cliente e implantação em Cloudflare Pages ainda não são automáticos.
+- Instagram, Google Business Profile, avaliações e análise automática de presença digital ainda não estão totalmente integrados.
+- \`GOOGLE_PLACES_API_KEY\` está cadastrado na Vercel, mas vazio; a descoberta via Google Places não está operacional até configurar uma chave válida e habilitar APIs/billing no Google Cloud.
+- Empresas e leads ainda dependem de sincronização manual em algumas telas.
+- A rota antiga \`/loja/[slug]\` não deve ser tratada como publicação de produção; a tabela \`public_storefronts\` não existe.
+- Build e validação automatizada do commit final ainda precisam terminar. O PR permanece em rascunho e não foi mesclado.
 
-## Próximas verificações obrigatórias
+## Próximos passos de validação
 
-1. Criar/invitar a conta proprietária pelo fluxo seguro do Supabase Auth.
-2. Provisionar uma única organização interna e a associação owner por procedimento administrativo controlado.
-3. Desabilitar signup público no painel Auth.
-4. Entrar com a conta real e testar navegação, CRUD, upload, download e exclusão de arquivos.
-5. Corrigir os fluxos de empresas e leads para persistência cloud-first, mantendo backup local.
-6. Implementar editor/geração do projeto do cliente e pipeline de publicação.
-7. Executar testes automatizados, validar preview e revisar o diff da PR.
-8. Somente após aprovação técnica, mesclar e publicar.
-
-## Regra de segurança operacional
-
-Nenhuma etapa desta documentação autoriza modificar dados ou configurações do projeto do Açougue Bom Jardim. Não criar clientes fictícios, não apagar dados existentes e não publicar em produção sem validação.
+1. Abrir o primeiro acesso, criar a senha e confirmar o e-mail proprietário.
+2. Entrar no workspace e verificar se a organização foi provisionada automaticamente.
+3. Testar criar projeto, anexar arquivos, montar landing page, salvar e publicar.
+4. Abrir a página pública em janela anônima e validar WhatsApp, imagens e responsividade.
+5. Concluir os testes automatizados e revisar os logs do preview.
+6. Só então considerar a Arcany pronta para uso operacional do primeiro cliente.
