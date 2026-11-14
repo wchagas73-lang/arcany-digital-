@@ -1,61 +1,104 @@
-# Arcany Digital — status de implementação
+# Arcany Digital: status de implementação
 
-Atualizado em 09/11/2026.
+Atualizado em 14/11/2026.
 
-## Repositório e autenticação
+## Objetivo do produto
+
+A Arcany Digital é a plataforma SaaS usada pelo profissional que prospecta empresas e vende soluções digitais sob medida. As empresas prospectadas são clientes do profissional e não precisam criar conta na Arcany para receber sites, catálogos, lojas, automações ou sistemas.
+
+## Repositório e integração
+
+- Repositório: `wchagas73-lang/arcany-digital-`.
+- Branch de integração: `feat/supabase-auth-protection`.
+- Branch padrão: `main`.
+- A branch de integração está 86 commits à frente da `main`, sem commits atrás, e existe uma PR em rascunho (#1). Não mesclar sem revisão do diff e dos efeitos nos módulos existentes.
+- A PR altera autenticação, armazenamento, navegação e módulos de negócio. Também remove a rota antiga `src/app/api/pedidos/route.ts` e redireciona as páginas de estoque, financeiro e pedidos para o dashboard.
+- O fluxo de vitrine na branch de integração envia o pedido diretamente ao WhatsApp e informa que não armazena o pedido na Arcany.
+
+## Autenticação e isolamento
 
 - Supabase SSR está integrado por helpers separados para navegador e servidor.
-- A tela `/acesso` permite cadastro e login por e-mail/senha.
-- No cadastro com sessão imediata, a aplicação consulta `organization_members` e chama `public.bootstrap_organization` quando ainda não há associação.
-- Quando a confirmação de e-mail está ativa, `/auth/callback` troca o código por sessão, valida o usuário, consulta a associação e chama o bootstrap se necessário.
-- No login, uma conta sem associação também tenta criar a primeira organização.
+- `/acesso` permite cadastro e login por e-mail/senha.
+- O cadastro com sessão imediata e o callback de confirmação usam `ensureUserOrganization`, que consulta a associação, executa `public.bootstrap_organization` se necessário e confirma a associação.
 - O middleware exige sessão nas rotas internas e mantém `/acesso`, `/auth/callback` e `/loja/:slug` públicas.
-- Os testes reais de cadastro, confirmação de e-mail, login/logout, recuperação de senha e isolamento entre duas contas ainda não foram concluídos.
+- O usuário ainda não concluiu o primeiro cadastro real. Testes de cadastro, confirmação de e-mail, login/logout e isolamento entre duas contas permanecem pendentes.
+- Não armazenar nem solicitar senhas do usuário em conversas.
 
 ## Supabase Arcany
 
 Projeto-alvo exclusivo: `kiwhtyuqgvcczwtafzcn`.
 
 Migrações registradas no banco:
-1. `20261107194126_initial_saas_schema` — aplicada uma vez.
-2. `20261107194405_restrict_function_execute_permissions` — aplicada.
-3. `20261107203829_harden_tenant_rls_and_index_foreign_keys` — aplicada.
+1. `20261107194126_initial_saas_schema`.
+2. `20261107194405_restrict_function_execute_permissions`.
+3. `20261107203829_harden_tenant_rls_and_index_foreign_keys`.
 
-Estado verificado:
-- 15 tabelas no schema público; RLS habilitado nas 15.
-- Políticas de isolamento das tabelas de negócio usam `private.is_org_member(organization_id)`.
-- `anon` não pode executar `public.bootstrap_organization(text)`; `authenticated` pode, conforme necessário ao cadastro self-service.
-- Contagens atuais: 0 organizações, 0 associações, 0 empresas e 0 leads.
-- A chave primária de `organization_members` ainda permite tecnicamente mais de uma organização por usuário. O índice único por `user_id` está preparado no script de hardening, mas ainda não foi aplicado.
-
-### Pendência de privilégios
-
-A auditoria SQL confirmou privilégios de tabela excessivos em `anon`, incluindo `TRUNCATE`, e em `authenticated`, incluindo `TRUNCATE`, `REFERENCES` e `TRIGGER`. RLS não protege contra `TRUNCATE`.
-
-O script `docs/sql/20261108_tenant_privilege_hardening.sql` foi preparado e revisado, mas não aplicado. A aplicação no banco deve aguardar revisão/aprovação da etapa de DDL e validação do ambiente. Não executar novamente a migração inicial.
-
-A migração opcional `20261107210000_public_storefronts.sql` permanece não aplicada; não é necessária para a autenticação ou para a migração de empresas/leads nesta fase.
+Estado confirmado:
+- 15 tabelas no schema público, todas com RLS habilitado.
+- Políticas de isolamento usam `private.is_org_member(organization_id)`.
+- A função `public.bootstrap_organization(text)` exige usuário autenticado, impede associação duplicada no fluxo normal e tem `search_path` restrito a `pg_catalog`.
+- `anon` não pode executar o bootstrap; `authenticated` pode, conforme necessário ao cadastro self-service.
+- O índice único `organization_members_one_org_per_user_uidx` foi criado para impor uma organização por usuário.
+- O hardening de privilégios foi aplicado no projeto Arcany: privilégios de tabelas para `anon` removidos; privilégios elevados de `authenticated` removidos; permissões CRUD mantidas para `authenticated`.
+- Os privilégios padrão foram ajustados para objetos criados pela role `postgres`.
+- Não foi possível alterar os privilégios padrão da role `supabase_admin` com a conexão disponível. Essa limitação permanece documentada.
+- A auditoria Security ainda sinaliza `public.bootstrap_organization` por ser `SECURITY DEFINER` e executável por `authenticated`. A função é necessária ao cadastro; não retirar EXECUTE sem alternativa testada.
+- O Health Advisor não apresentou findings na última verificação.
+- Não há contas, organizações, associações, empresas ou leads reais cadastrados no banco.
 
 ## Empresas, leads e backup
 
-- Empresas e leads continuam armazenados localmente, em chaves namespaced pelo ID do usuário autenticado.
-- Chaves locais antigas sem escopo de usuário não são importadas automaticamente, para evitar misturar dados em dispositivos compartilhados.
-- A tela Leads oferece exportação CSV e sincronização manual parcial; a sincronização não remove o cache local.
-- O CRM foi ajustado para não importar automaticamente os leads locais quando a tabela remota está vazia.
-- Empresas ainda não foram migradas para o banco.
-- Não iniciar a migração completa até corrigir privilégios, impor associação única, testar autenticação e isolamento RLS com duas contas reais e preparar backup/reconciliação idempotente.
+- Empresas e leads são mantidos em chaves locais separadas pelo ID do usuário autenticado.
+- Chaves antigas sem identificação de conta não são importadas automaticamente.
+- Existe exportação JSON de backup local, sem upload ou exclusão de dados.
+- Leads têm sincronização manual para o Supabase, com deduplicação básica e sem apagar o cache local.
+- Empresas ainda não têm sincronização completa com o banco. O módulo informa que os registros permanecem no aparelho.
+- Antes de migrar empresas e leads, gerar backup, validar organização, deduplicar e preservar o armazenamento local até a conferência final.
+
+## Vitrines e pedidos
+
+- O banco Arcany tem a tabela `store_orders`, mas não tem a tabela `public_storefronts`.
+- A migração opcional `20261107210000_public_storefronts.sql` não foi aplicada.
+- A página `/loja/:slug` consulta `public_storefronts`; portanto, a vitrine pública não pode ser considerada funcional até que a estrutura e as políticas necessárias sejam implementadas e testadas.
+- A versão atual da vitrine na branch de integração prepara o pedido para WhatsApp e não o registra na Arcany.
+- Não aplicar a migração opcional sem revisar as políticas de leitura pública, escrita e proteção dos dados dos pedidos.
 
 ## Segredos e configuração
 
-- A árvore atual do repositório contém apenas `.env.example`, sem arquivos de ambiente reais.
-- `.gitignore` agora ignora `.env*`, com exceção explícita de `.env.example`.
-- Os helpers de navegador usam somente URL e chave publicável/anon do Supabase.
-- `GOOGLE_PLACES_API_KEY` é lida em rotas de servidor, sem prefixo `NEXT_PUBLIC_`.
-- `SUPABASE_SERVICE_ROLE_KEY` aparece apenas como nome de variável vazio/documentado no exemplo de ambiente; não deve ser configurada no cliente nem versionada com valor.
+- `.env.example` contém apenas variáveis públicas do Supabase e a variável de servidor `GOOGLE_PLACES_API_KEY` vazia.
+- Não versionar arquivos de ambiente reais nem valores de chaves privadas.
+- A chave Google Places deve permanecer somente no servidor.
+- Não usar `SUPABASE_SERVICE_ROLE_KEY` no navegador. Qualquer uso futuro deve ficar em rota de servidor com validação explícita e escopo mínimo.
 
-## Validação
+## Validação automatizada
 
-- No commit de código `0192810`, o GitHub Actions concluiu `npm audit` com 0 vulnerabilidades, `npm run build` aprovado e `npm run lint` aprovado. Resta um aviso não bloqueante sobre `<img>` em `src/app/solucoes/page.tsx`.
-- O deploy de preview do projeto Vercel `arcany-digital` (sem hífen) está concluído e marcado como Ready: `https://arcany-digital-c0nelbq2w-wchagas73-3735s-projects.vercel.app`.
-- O projeto Vercel separado `arcany-digital-` (com hífen) falhou por limite diário de implantações. Não confundir os dois projetos.
-- A compilação não substitui testes reais de autenticação, associação e isolamento multi-tenant.
+No workflow GitHub Actions associado ao commit `93a28dd397dca74ba346b7d62682f050c6f75a72`:
+- Auditoria de dependências: aprovada.
+- Testes de bootstrap/associação: aprovados.
+- Build de produção: aprovado.
+- Lint: aprovado.
+
+Essas verificações não substituem testes reais de autenticação, persistência, isolamento entre contas, fluxos comerciais e publicação.
+
+## Vercel
+
+- A consulta atual à equipe Vercel foi bloqueada por falta de autorização para o escopo `wchagas73-3735s-projects`.
+- Foi gerado um link de autorização de acesso à equipe, válido por 10 minutos. Após a aprovação pelo titular, será possível consultar projetos, variáveis não secretas, deployments e logs.
+- Não presumir que o deployment esteja atualizado ou pronto sem conferir o projeto correto e o commit publicado.
+
+## Próximas etapas
+
+1. Conferir a configuração de produção e o deployment Vercel.
+2. Revisar a PR inteira e preservar os módulos que devem continuar disponíveis.
+3. Implementar persistência de empresas na nuvem com backup e reconciliação não destrutiva.
+4. Fortalecer e testar a sincronização de leads.
+5. Revisar o fluxo de vitrine e pedidos antes de habilitar a migração opcional.
+6. Após o primeiro cadastro real, testar confirmação de e-mail, login/logout e isolamento entre duas contas.
+7. Só então declarar a Arcany pronta para receber assinantes em produção.
+
+## Limites de segurança e escopo
+
+- Não executar comandos no Supabase do Açougue Bom Jardim (`tbpxqtwlmpifuazmzihe`).
+- O único Supabase autorizado para a Arcany é `kiwhtyuqgvcczwtafzcn`.
+- Não apagar dados, não criar dados fictícios e não reaplicar a migração inicial.
+- Não migrar dados locais sem backup verificável e plano de reconciliação.
