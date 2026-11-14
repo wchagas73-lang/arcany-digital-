@@ -52,8 +52,9 @@ Estado confirmado:
 - Chaves antigas sem identificação de conta não são importadas automaticamente.
 - Existe exportação JSON de backup local, sem upload ou exclusão de dados.
 - Leads têm sincronização manual para o Supabase, com deduplicação básica e sem apagar o cache local.
-- Empresas ainda não têm sincronização completa com o banco. O módulo informa que os registros permanecem no aparelho.
-- Antes de migrar empresas e leads, gerar backup, validar organização, deduplicar e preservar o armazenamento local até a conferência final.
+- O módulo Empresas agora tem sincronização manual para o Supabase por organização. A rotina compara nome/telefone, envia somente registros ainda não encontrados e mantém todos os dados locais.
+- A sincronização de empresas foi adicionada ao código, mas ainda precisa passar pelo GitHub Actions e por teste real com uma conta autenticada.
+- Antes de qualquer migração em lote, gerar backup, validar organização, deduplicar e preservar o armazenamento local até a conferência final.
 
 ## Vitrines e pedidos
 
