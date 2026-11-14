@@ -1,84 +1,107 @@
 # Configuração e estado atual da Arcany Digital
 
-## 1. Projeto Supabase correto
+## 1. Projeto Supabase autorizado
 
 Este guia se refere exclusivamente ao projeto Supabase da Arcany Digital:
 
 - Project ref: `kiwhtyuqgvcczwtafzcn`
-- Não execute estes passos em projetos de clientes.
-- O banco já possui a estrutura inicial aplicada. **Não execute novamente** a migração `initial_saas_schema`.
+- Não executar comandos deste guia em projetos de clientes.
+- A migração inicial já está aplicada. **Não reaplicar** `initial_saas_schema`.
 
-A conferência atual do histórico do banco encontrou estas migrações aplicadas:
+Histórico confirmado no banco:
 
 1. `20261107194126_initial_saas_schema`
 2. `20261107194405_restrict_function_execute_permissions`
 3. `20261107203829_harden_tenant_rls_and_index_foreign_keys`
+4. `20261114150346_revoke_public_workspace_bootstrap`
+5. `20261114153048_project_assets_private_storage`
+6. `20261114154420_project_publications_and_public_media`
+7. `20261114154530_project_publications_policy_performance`
+8. `20261114154604_project_publications_public_read_roles`
+9. `20261114154710_owner_only_auth_signup_provisioning`
 
-O banco possui 15 tabelas públicas com RLS habilitado. A contagem inclui `store_orders`, criada na estrutura inicial. A migração opcional de storefronts `20261107210000_public_storefronts.sql` **não está aplicada** e não deve ser executada para habilitar cadastro, login, empresas ou leads.
+A consulta atual encontrou **17 tabelas públicas e RLS habilitado nas 17**. O advisor de segurança retornou zero findings. A verificação também encontrou zero usuários em `auth.users`, zero organizações, zero associações em `organization_members`, zero empresas e zero leads. Portanto, a estrutura está preparada, mas o primeiro acesso real ainda não foi executado.
 
-## 2. Variáveis da Vercel
+### Migrações que não devem ser aplicadas agora
 
-Para autenticação e os módulos atuais de empresas/leads, são necessárias somente:
+- `202610310002_public_storefronts.sql` é uma migração legada e não foi aplicada.
+- `20261107210000_public_storefronts.sql` também não consta no histórico aplicado. A publicação atual usa `project_publications` e as rotas `/p/[slug]`; não há necessidade demonstrada para criar a tabela antiga `public_storefronts`.
+- `20261114170000_project_assets_private_storage.sql` não consta no histórico aplicado e repete a criação da tabela/bucket de arquivos já coberta por `20261114153048_project_assets_private_storage`. Não aplicar sem reconciliação específica.
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Project URL do Supabase Arcany.
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: chave publicável atual. Se a conta ainda usar a chave anon legada, o código aceita `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Não executar nenhuma dessas migrações como tentativa de corrigir cadastro, login, empresas ou leads.
 
-A chave pública pode aparecer no navegador. Ela não substitui as políticas RLS.
+## 2. Variáveis de ambiente
 
-`GOOGLE_PLACES_API_KEY` é opcional para os recursos de prospecção que usam Places e deve permanecer somente no servidor, sem prefixo `NEXT_PUBLIC_`.
+Configurar no ambiente de implantação:
 
-**Não configure nem exponha `SUPABASE_SERVICE_ROLE_KEY` para os módulos de autenticação, empresas ou leads.** Uma chave service-role só poderá ser considerada quando existir uma operação de servidor que realmente precise ignorar RLS, com endpoint revisado e escopo mínimo. Nunca a coloque em código cliente, em variável `NEXT_PUBLIC_`, no GitHub ou em mensagens.
+- `NEXT_PUBLIC_SUPABASE_URL`: URL do projeto Arcany.
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: chave publicável recomendada. O código aceita também `NEXT_PUBLIC_SUPABASE_ANON_KEY` para compatibilidade.
+- `ARCANY_OWNER_EMAIL`: e-mail autorizado para o middleware. Deve corresponder ao e-mail permitido pelo trigger de Auth no banco.
+- `GOOGLE_PLACES_API_KEY`: opcional para prospecção; somente no servidor.
 
-Depois de alterar variáveis na Vercel, publique um novo deployment e confira se ele está associado ao projeto correto.
+A chave publicável/anon pode estar no navegador. A proteção dos dados depende de Auth e RLS.
 
-## 3. Cadastro, login e organização
+**Não configurar `SUPABASE_SERVICE_ROLE_KEY` para autenticação, empresas ou leads.** O fluxo atual não precisa dessa chave. Nunca colocar segredos em `NEXT_PUBLIC_`, no cliente ou no GitHub.
 
-O fluxo implementado é:
+## 3. Cadastro, login e associação organizacional
 
-1. O cadastro chama `supabase.auth.signUp`.
-2. Se o Supabase devolver uma sessão imediatamente, a aplicação consulta `organization_members` e chama `public.bootstrap_organization` se ainda não houver associação.
-3. Se a confirmação de e-mail estiver habilitada, o callback `/auth/callback` troca o código por sessão, valida o usuário e executa o mesmo processo de associação.
-4. O login valida a sessão e procura a organização do usuário.
-5. O middleware protege as rotas internas; `/acesso`, `/auth/callback` e `/loja/:slug` permanecem públicas.
+O modelo atual é um **workspace privado de uma única agência**, operado pelo proprietário. Clientes e empresas prospectadas não recebem contas na Arcany.
 
-A função de bootstrap está liberada para usuários autenticados e negada a usuários anônimos. O banco ainda precisa de uma restrição única para garantir uma organização por usuário e de uma revisão dos privilégios de tabela antes de liberar a persistência multiusuário.
+Fluxo efetivo:
 
-Ainda faltam testes reais de cadastro, confirmação, login, logout e isolamento entre duas contas independentes. Não considere a autenticação validada apenas porque o build passou.
+1. A tela de primeiro acesso chama `supabase.auth.signUp` para a conta proprietária autorizada.
+2. O cadastro **não chama** `public.bootstrap_organization`.
+3. Um trigger `AFTER INSERT ON auth.users` executa `private.arcany_owner_signup_provision()`. A função é `SECURITY DEFINER`, usa `search_path` vazio e aceita somente o e-mail proprietário configurado no código/migração.
+4. O trigger cria ou reutiliza a organização `Arcany Digital` e insere a associação do usuário em `organization_members` com papel `owner`.
+5. Se houver confirmação de e-mail, `/auth/callback` troca o código por sessão e valida novamente a identidade.
+6. O middleware usa cookies Supabase, exige sessão válida e confere `ARCANY_OWNER_EMAIL` antes de liberar as rotas privadas.
 
-No Supabase Auth, a URL de retorno precisa incluir o endereço publicado da Arcany terminado em `/auth/callback`. Configure também a URL base do site para os links de confirmação.
+A função antiga `public.bootstrap_organization(text)` teve EXECUTE revogado para `PUBLIC`, `anon` e `authenticated`; no estado atual, ela não é o caminho de provisionamento do navegador. Não reabrir essa permissão.
 
-## 4. Situação dos módulos de empresas e leads
+A associação foi confirmada por inspeção do trigger e da função, mas **não foi validada por cadastro real**: ainda existem zero usuários e zero organizações. Não declarar o login concluído antes do primeiro acesso e da confirmação do e-mail.
 
-- **Empresas:** continuam no `localStorage`; ainda não há sincronização completa com o banco.
-- **Leads:** continuam no `localStorage`; existe uma ação manual de sincronização para a tabela `public.leads`, mas ela é parcial e não representa uma migração completa.
-- Os caches atuais usam chaves separadas por usuário autenticado.
-- Chaves antigas sem identificação de conta não são importadas automaticamente, para evitar misturar dados de pessoas diferentes em aparelhos compartilhados.
-- O botão **Backup JSON** exporta as chaves antigas conhecidas e as chaves da conta atualmente autenticada. O arquivo é gerado no aparelho, sem enviar dados ao servidor e sem apagar o armazenamento local.
+No Supabase Auth, revisar a configuração global de signups e cadastrar a URL base do ambiente e o redirect terminado em `/auth/callback`. O trigger bloqueia e-mails diferentes do proprietário, mas isso não substitui a revisão das configurações do Auth.
 
-Antes da migração definitiva:
-1. Gere e guarde o backup JSON.
-2. Confira se os dados antigos pertencem à conta correta.
-3. Valide cadastro, associação organizacional e RLS com duas contas reais.
-4. Implemente importação idempotente com relatório de registros inseridos, ignorados e conflitantes.
-5. Compare a contagem e os dados no Supabase com o backup.
-6. Mantenha o `localStorage` até a conferência final e aprovação da substituição.
+## 4. RLS e arquivos
 
-## 5. Storefronts e pedidos públicos
+- Todas as 17 tabelas públicas estão com RLS habilitado.
+- As tabelas privadas de negócio usam políticas baseadas em `private.is_org_member(organization_id)`.
+- `organization_members` permite ao usuário consultar sua própria associação; a criação inicial é feita pelo trigger privilegiado.
+- `project_publications` permite leitura anônima somente de registros com `published = true`.
+- O bucket `arcany-client-assets` está privado, com limite de 25 MB.
+- O bucket `arcany-published-media` é público para servir somente mídias selecionadas para páginas publicadas.
 
-A migração `20261107210000_public_storefronts.sql` não é necessária para autenticação, prospecção, empresas ou leads. Ela permanece fora do banco aplicado e não deve ser executada sem necessidade demonstrada e autorização específica.
+A revisão estática das políticas e o advisor não substituem um teste funcional autenticado. Como o modelo atual é de um único proprietário, não há teste de duas contas independentes executado nesta etapa.
 
-Não configure chave administrativa para habilitar funcionalidades futuras por antecipação. Primeiro implemente e revise o endpoint servidor correspondente, as validações de entrada, o cálculo de preços no servidor e os controles de abuso.
+## 5. Empresas e leads: estado e caminho de migração
 
-## 6. Critérios para considerar a integração pronta
+- **Empresas:** ainda são cadastradas no armazenamento local; há sincronização manual aditiva para `public.companies`.
+- **Leads:** ainda são cadastrados no armazenamento local; há sincronização manual aditiva para `public.leads`.
+- As chaves locais atuais são separadas pelo ID do usuário autenticado.
+- O botão **Backup JSON** exporta as chaves legadas conhecidas e as chaves da conta atual. O arquivo é criado no aparelho, sem upload e sem apagar dados.
+- Chaves antigas sem ID de usuário não são importadas automaticamente, para evitar misturar dados de aparelhos compartilhados.
+- O CRM não importa automaticamente leads locais quando a nuvem está vazia.
 
-- [ ] Build de produção aprovado.
-- [ ] Cadastro com confirmação de e-mail validado.
-- [ ] Login e logout validados.
-- [ ] Uma organização por usuário garantida no banco.
-- [ ] Duas contas independentes sem acesso cruzado aos dados.
-- [ ] Privilégios de tabela e sequência revisados e endurecidos.
-- [ ] Backup JSON testado em aparelho real.
-- [ ] Migração idempotente de empresas e leads testada sem apagar o cache local.
-- [ ] Reconciliação concluída antes de trocar a fonte principal de dados.
+Antes de tornar o banco a fonte principal:
 
-Até esses critérios serem atendidos, a integração deve ser considerada em andamento, não pronta para produção.
+1. Criar e confirmar o primeiro acesso do proprietário.
+2. Gerar e guardar o backup JSON no aparelho.
+3. Conferir manualmente a origem dos dados das chaves antigas.
+4. Executar a sincronização manual de empresas e leads, que mantém os registros locais.
+5. Implementar reconciliação com contagem de inseridos, ignorados e conflitos.
+6. Comparar os dados da nuvem com o backup.
+7. Só depois de conferência, teste e aprovação, alterar a fonte principal. Não apagar o `localStorage` nesta fase.
+
+## 6. Critérios de conclusão
+
+- [x] Build de produção, testes automatizados, lint e auditoria de dependências aprovados no commit de integração `2077fc061450c97558874a1f29bf14cc7414c701`.
+- [x] Middleware e callback com validação server-side do proprietário.
+- [x] Trigger de provisionamento e permissões de bootstrap revisados no projeto Arcany.
+- [x] RLS habilitado nas 17 tabelas públicas.
+- [ ] Criar a conta proprietária e confirmar o e-mail.
+- [ ] Validar login, renovação de sessão e logout em navegador.
+- [ ] Testar CRUD, upload, download, exclusão e publicação com a conta real.
+- [ ] Testar o backup JSON em aparelho real.
+- [ ] Concluir a migração/reconciliação de empresas e leads sem apagar o cache local.
+
+Até concluir os itens pendentes, a integração permanece em validação e não deve ser considerada pronta para produção.
