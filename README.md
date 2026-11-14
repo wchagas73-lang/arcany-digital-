@@ -1,8 +1,17 @@
 # Arcany Digital
 
-A Arcany Digital é uma plataforma SaaS para profissionais e empreendedores que prospectam empresas e desenvolvem soluções digitais sob medida.
+A Arcany Digital é o sistema interno de operação da agência digital do proprietário. Não é um SaaS para clientes finais nem uma plataforma de autoatendimento para outras agências.
 
-O assinante da Arcany é o profissional que presta serviços digitais. As empresas prospectadas são clientes desse profissional: elas recebem sites, catálogos, lojas, automações ou sistemas desenvolvidos, mas não precisam criar conta na Arcany para operar o próprio negócio.
+Somente o proprietário deve acessar a Arcany. Empresas prospectadas e clientes contratantes são registros comerciais e projetos atendidos, não usuários da plataforma. O trabalho acontece dentro da Arcany: prospecção, diagnóstico, proposta, criação, publicação, entrega e histórico de serviços.
+
+## Modelo operacional obrigatório
+
+- Uma conta administrativa do proprietário, sem cadastro público ou convite de empresas/clientes.
+- Empresas e contatos ficam na carteira comercial da Arcany, sem login próprio.
+- Cada serviço contratado vira um projeto com briefing, escopo, etapas, arquivos, links, publicação e entrega.
+- Estoque, financeiro, pedidos, e-commerce, cardápio e outros sistemas são modelos de soluções a serem configurados e entregues aos clientes, não módulos de ERP da própria agência.
+- Manter histórico de clientes e serviços prestados, sem criar áreas de acesso para os clientes.
+- A autenticação atual ainda possui fluxo de cadastro e a arquitetura de organizações precisa ser simplificada/restrita ao proprietário antes de ser considerada concluída.
 
 ## O que a plataforma organiza
 
