@@ -1,12 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { solutionTemplates } from "@/lib/solution-templates";
 import { Copy, ExternalLink, FilePlus2, FolderKanban, RefreshCw, Sparkles } from "lucide-react";
 
-type SavedProject = { id: string; name: string; solution_type: string; status: string; created_at: string };
+type SavedProject = { id: string; name: string; solution_type: string; status: string; created_at: string; published_url?: string | null };
 const field: React.CSSProperties = { width: "100%", minHeight: 42, border: "1px solid var(--border)", borderRadius: 9, background: "#0c121d", color: "#f3f6fb", padding: "0 11px", fontSize: 12 };
 const label: React.CSSProperties = { display: "grid", gap: 6, fontSize: 11, color: "#c8d1df" };
 const area: React.CSSProperties = { ...field, minHeight: 82, padding: 10, resize: "vertical" };
@@ -74,7 +75,7 @@ export default function ProjectsPage() {
       if (memberError) throw memberError;
       if (!member) { setStatus("A conta ainda não possui um workspace configurado."); setLoading(false); return; }
       setOrganizationId(member.organization_id);
-      const { data, error } = await supabase.from("projects").select("id,name,solution_type,status,created_at").eq("organization_id", member.organization_id).order("created_at", { ascending: false }).limit(30);
+      const { data, error } = await supabase.from("projects").select("id,name,solution_type,status,created_at,published_url").eq("organization_id", member.organization_id).order("created_at", { ascending: false }).limit(30);
       if (error) throw error;
       setSavedProjects((data ?? []) as SavedProject[]);
       setStatus("");
@@ -186,12 +187,12 @@ export default function ProjectsPage() {
           {savedProjects.map(project => <div key={project.id} style={{ padding: 11, border: "1px solid var(--border)", borderRadius: 9 }}>
             <strong style={{ fontSize: 11 }}>{project.name}</strong>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}><span className="status-pill">{project.solution_type}</span><span className="status-pill">{project.status}</span></div>
-            <div style={{ color: "var(--muted)", fontSize: 9, marginTop: 6 }}>{new Date(project.created_at).toLocaleString("pt-BR")}</div>
+            <div style={{ color: "var(--muted)", fontSize: 9, marginTop: 6 }}>{new Date(project.created_at).toLocaleString("pt-BR")}</div><Link href={"/projetos/"+project.id} className="secondary-button" style={{display:"inline-flex",marginTop:9}}>Abrir produção e entrega <ExternalLink size={12}/></Link>
           </div>)}
         </div> : <div style={{ padding: 20, border: "1px dashed var(--border)", borderRadius: 10, textAlign: "center" }}><FolderKanban size={22} color="#8390a5"/><p style={{ color: "var(--muted)", fontSize: 11, lineHeight: 1.6 }}>Nenhum projeto salvo ainda. Ao criar o primeiro projeto real, ele aparecerá aqui.</p></div>}
         <div style={{ marginTop: 15, padding: 12, borderRadius: 9, background: "rgba(149,134,255,.07)", border: "1px solid rgba(149,134,255,.18)" }}>
           <strong style={{ fontSize: 11 }}>Etapa atual: planejamento</strong>
-          <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.6, margin: "5px 0 0" }}>O projeto fica registrado internamente. Editor visual, geração do repositório, preview público e publicação serão etapas separadas, após validação técnica.</p>
+          <p style={{ color: "var(--muted)", fontSize: 10, lineHeight: 1.6, margin: "5px 0 0" }}>Abra o projeto para anexar materiais do cliente, acompanhar a produção, registrar o link de preview e controlar a entrega. A publicação efetiva continua dependendo da hospedagem e validação do projeto produzido.</p>
         </div>
       </section>
     </form>
