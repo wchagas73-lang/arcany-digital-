@@ -9,7 +9,7 @@ begin;
 -- RLS filters rows, but it does not govern TRUNCATE. Remove broad anon grants
 -- from current private SaaS tables and retain row-level CRUD only for authenticated users.
 revoke all privileges on all tables in schema public from anon;
-revoke truncate, references, trigger on all tables in schema public from authenticated;
+revoke truncate, references, trigger, maintain on all tables in schema public from authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 
 -- No public sequences exist today, but secure existing/future sequences too.
@@ -23,7 +23,7 @@ grant usage, select on all sequences in schema public to authenticated;
 alter default privileges for role postgres in schema public
   revoke all on tables from anon;
 alter default privileges for role postgres in schema public
-  revoke truncate, references, trigger on tables from authenticated;
+  revoke truncate, references, trigger, maintain on tables from authenticated;
 alter default privileges for role postgres in schema public
   grant select, insert, update, delete on tables to authenticated;
 alter default privileges for role postgres in schema public
