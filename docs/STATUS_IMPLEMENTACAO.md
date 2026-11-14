@@ -4,7 +4,9 @@ Atualizado em 14/11/2026.
 
 ## Objetivo do produto
 
-A Arcany Digital é a plataforma SaaS usada pelo profissional que prospecta empresas e vende soluções digitais sob medida. As empresas prospectadas são clientes do profissional e não precisam criar conta na Arcany para receber sites, catálogos, lojas, automações ou sistemas.
+A Arcany Digital é o sistema interno de uma única agência digital, operado pelo proprietário. Empresas prospectadas e clientes contratantes não terão contas nem acesso à plataforma. A Arcany deve concentrar prospecção, carteira comercial, diagnóstico, propostas, criação de sites, lojas, cardápios, catálogos, sistemas, publicação, entrega e histórico dos serviços prestados.
+
+A implementação atual ainda contém cadastro público, bootstrap de organizações por usuário e estrutura multi-tenant. Esses pontos estão em desacordo com o modelo definido e precisam ser corrigidos antes de considerar o acesso administrativo pronto.
 
 ## Repositório e integração
 
