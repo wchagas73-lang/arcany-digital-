@@ -2,9 +2,9 @@
 
 ## Definição do produto
 
-A Arcany é uma plataforma SaaS usada por profissionais e empreendedores que prospectam empresas, identificam oportunidades e desenvolvem soluções digitais. O assinante é o prestador de serviços. A empresa prospectada é cliente dele e recebe a solução pronta; não precisa entrar na Arcany nem usar a plataforma para administrar sua operação.
+A Arcany é o ambiente interno de trabalho de uma única operação de agência digital. O proprietário usa a plataforma para prospectar empresas, diagnosticar problemas, preparar propostas, desenvolver soluções digitais, publicar entregáveis e manter histórico dos serviços prestados.
 
-Cada assinante tem uma conta e um espaço de trabalho isolado. Leads, empresas, diagnósticos, propostas e projetos de uma organização nunca podem ser vistos por outra.
+Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenticação deve proteger somente o acesso administrativo do proprietário. O banco pode manter uma organização interna única por simplicidade, mas não deve oferecer auto cadastro, multi-tenant comercial ou onboarding de clientes.
 
 ## Fase 1 — Fundação e publicação
 - [x] Estrutura inicial Next.js, TypeScript e identidade visual responsiva.
