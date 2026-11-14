@@ -15,6 +15,7 @@ const navigation = [
   { label: "Central de vendas", href: "/vendas", icon: MessageSquareText },
   { label: "Diagnóstico", href: "/diagnostico", icon: ClipboardCheck },
   { label: "Central de soluções", href: "/solucoes", icon: Wrench },
+  { label: "Biblioteca de modelos", href: "/modelos", icon: Sparkles },
   { label: "Criar projetos", href: "/projetos", icon: Globe },
   { label: "Empresas", href: "/empresas", icon: Building2 },
   { label: "Leads", href: "/leads", icon: Target },
