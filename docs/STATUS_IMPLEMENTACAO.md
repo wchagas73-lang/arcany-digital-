@@ -1,147 +1,74 @@
-# Arcany Digital: status de implementação
+# Arcany Digital: status real de implementação
 
 Atualizado em 14/11/2026.
 
-## Objetivo do produto
+## Modelo do produto
 
-A Arcany Digital é o sistema interno de uma única agência digital, operado pelo proprietário. Empresas prospectadas e clientes contratantes não terão contas nem acesso à plataforma. A Arcany deve concentrar prospecção, carteira comercial, diagnóstico, propostas, criação de sites, lojas, cardápios, catálogos, sistemas, publicação, entrega e histórico dos serviços prestados.
+A Arcany Digital é o workspace privado de uma única agência, operado pelo proprietário. Clientes e empresas prospectadas são registros de CRM e projetos, sem contas ou acesso administrativo à Arcany.
 
-A implementação atual ainda contém cadastro público, bootstrap de organizações por usuário e estrutura multi-tenant. Esses pontos estão em desacordo com o modelo definido e precisam ser corrigidos antes de considerar o acesso administrativo pronto.
-
-## Repositório e integração
+## Ambiente
 
 - Repositório: `wchagas73-lang/arcany-digital-`.
 - Branch de integração: `feat/supabase-auth-protection`.
-- Branch padrão: `main`.
-- A branch de integração está à frente da `main`, sem commits atrás, e existe uma PR em rascunho (#1). Não mesclar sem revisão do diff e dos efeitos nos módulos existentes.
-- A PR altera autenticação, armazenamento, navegação e módulos de negócio. Também remove a rota antiga `src/app/api/pedidos/route.ts`. Os módulos de estoque, financeiro e pedidos foram restaurados nesta etapa e voltaram ao menu, com consultas limitadas à organização autenticada. O recebimento público de pedidos ainda não está ativo porque a rota de API foi removida e a tabela `public_storefronts` não existe.
-- O fluxo de vitrine na branch de integração envia o pedido diretamente ao WhatsApp e informa que não armazena o pedido na Arcany.
+- Branch principal: `main`.
+- Supabase exclusivo da Arcany: `kiwhtyuqgvcczwtafzcn`.
+- Projeto Vercel: `arcany-digital`, ID `prj_jDvLrke7SJOL5nVaw12jaWCvjQ11`.
+- Não modificar o projeto Supabase do Açougue Bom Jardim (`tbpxqtwlmpifuazmzihe`).
+- As alterações desta etapa permanecem na branch de integração e não foram mescladas em main nem publicadas em produção.
 
-## Autenticação e isolamento
+## Implementado na branch de integração
 
-- Supabase SSR está integrado por helpers separados para navegador e servidor.
-- `/acesso` permite cadastro e login por e-mail/senha.
-- O cadastro com sessão imediata e o callback de confirmação usam `ensureUserOrganization`, que consulta a associação, executa `public.bootstrap_organization` se necessário e confirma a associação.
-- O middleware exige sessão nas rotas internas e mantém `/acesso`, `/auth/callback` e `/loja/:slug` públicas.
-- O usuário ainda não concluiu o primeiro cadastro real. Testes de cadastro, confirmação de e-mail, login/logout e isolamento entre duas contas permanecem pendentes.
-- Não armazenar nem solicitar senhas do usuário em conversas.
+- Acesso por login, sem formulário público de cadastro.
+- Middleware e callback verificam o e-mail proprietário configurado no servidor.
+- Biblioteca inicial de modelos por nicho e tipo de solução.
+- Briefing personalizado com instruções para não inventar informações comerciais.
+- Cadastro de projetos na tabela `projects`, com briefing e configuração inicial.
+- Página de administração com indicadores do banco, status do workspace e atalhos operacionais.
+- Página de produção por projeto: acompanhamento de etapa, endereço de preview/publicação e dados confirmados do cliente.
+- Upload de logo, fotos, vídeos MP4 e PDFs por projeto, com limite de 25 MB por arquivo.
+- Arquivos em bucket privado `arcany-client-assets`, com políticas de acesso por organização.
+- Tabela `project_assets` com RLS habilitado.
+- RLS habilitado nas tabelas públicas já existentes; políticas de negócio usam associação à organização.
+- Função pública de bootstrap de organização teve execução revogada para PUBLIC, anon e authenticated.
+- Advisor de segurança do Supabase sem findings na verificação após a migração de arquivos.
 
-## Supabase Arcany
+## Limites ainda não resolvidos
 
-Projeto-alvo exclusivo: `kiwhtyuqgvcczwtafzcn`.
+- A conta proprietária `wchagas73@gmail.com` ainda não existe em `auth.users`. A consulta retornou zero usuários com esse e-mail.
+- A organização interna e a associação owner ainda não foram provisionadas.
+- Não há ferramenta administrativa de Auth disponível nesta integração para convidar/criar o usuário de forma segura. Não criar registros diretamente em `auth.users` por SQL.
+- A configuração de signup público do Supabase Auth precisa ser conferida e desabilitada no painel do projeto. A interface não oferece cadastro, mas isso isoladamente não desativa a API pública de signup.
+- Login real, CRUD com usuário autenticado e fluxo de recuperação de sessão ainda não foram testados.
+- Empresas e leads ainda usam armazenamento local com sincronização manual em telas existentes. Não considerar sincronização entre dispositivos automática.
+- A biblioteca de modelos é estática e versionada no Git.
+- Upload de materiais e gestão de etapas do projeto estão implementados, mas ainda precisam de teste funcional com a conta proprietária.
+- O editor visual completo, geração automática de aplicações/repositórios, provisionamento de hospedagem e publicação automática ainda não estão implementados.
+- Registrar uma URL no projeto não publica o site. Publicação depende de gerar/validar a aplicação do cliente e implantar no provedor escolhido.
+- Instagram, Google Business Profile, avaliações, Google Places e IA de análise ainda não estão integrados por completo.
+- O fluxo público de loja e pedidos não está pronto; a tabela `public_storefronts` não existe e a rota antiga não deve ser tratada como produção.
+- Não há dados de clientes, leads ou projetos fictícios criados no banco.
 
-Migrações registradas no banco:
-1. `20261107194126_initial_saas_schema`.
-2. `20261107194405_restrict_function_execute_permissions`.
-3. `20261107203829_harden_tenant_rls_and_index_foreign_keys`.
+## Segurança
 
-Estado confirmado:
-- 15 tabelas no schema público, todas com RLS habilitado.
-- Políticas de isolamento usam `private.is_org_member(organization_id)`.
-- A função `public.bootstrap_organization(text)` exige usuário autenticado, impede associação duplicada no fluxo normal e tem `search_path` restrito a `pg_catalog`.
-- `anon` não pode executar o bootstrap; `authenticated` pode, conforme necessário ao cadastro self-service.
-- O índice único `organization_members_one_org_per_user_uidx` foi criado para impor uma organização por usuário.
-- O hardening de privilégios foi aplicado no projeto Arcany: privilégios de tabelas para `anon` removidos; privilégios elevados de `authenticated` removidos; permissões CRUD mantidas para `authenticated`.
-- Os privilégios padrão foram ajustados para objetos criados pela role `postgres`.
-- Não foi possível alterar os privilégios padrão da role `supabase_admin` com a conexão disponível. Essa limitação permanece documentada.
-- A auditoria Security ainda sinaliza `public.bootstrap_organization` por ser `SECURITY DEFINER` e executável por `authenticated`. A função é necessária ao cadastro; não retirar EXECUTE sem alternativa testada.
-- O Health Advisor não apresentou findings na última verificação.
-- Não há contas, organizações, associações, empresas ou leads reais cadastrados no banco.
+- O middleware usa `ARCANY_OWNER_EMAIL` no servidor e falha fechado quando não configurado.
+- Não usar `SUPABASE_SERVICE_ROLE_KEY` no navegador.
+- A tabela `project_assets` e o bucket privado usam autorização vinculada à organização.
+- Arquivos aceitos: JPEG, PNG, WEBP, PDF e MP4.
+- Não inserir dados diretamente em `auth.users`.
+- Não habilitar signup público para este modelo de produto.
+- Não mesclar a PR nem publicar em produção antes de validar autenticação, políticas, upload, persistência e rotas.
 
-## Empresas, leads e backup
+## Próximas verificações obrigatórias
 
-- Empresas e leads são mantidos em chaves locais separadas pelo ID do usuário autenticado.
-- Chaves antigas sem identificação de conta não são importadas automaticamente.
-- Existe exportação JSON de backup local, sem upload ou exclusão de dados.
-- Leads têm sincronização manual para o Supabase, com deduplicação básica e sem apagar o cache local.
-- O módulo Empresas agora tem sincronização manual para o Supabase por organização. A rotina compara nome/telefone, envia somente registros ainda não encontrados e mantém todos os dados locais.
-- A sincronização de empresas foi adicionada ao código, mas ainda precisa passar pelo GitHub Actions e por teste real com uma conta autenticada.
-- Antes de qualquer migração em lote, gerar backup, validar organização, deduplicar e preservar o armazenamento local até a conferência final.
+1. Criar/invitar a conta proprietária pelo fluxo seguro do Supabase Auth.
+2. Provisionar uma única organização interna e a associação owner por procedimento administrativo controlado.
+3. Desabilitar signup público no painel Auth.
+4. Entrar com a conta real e testar navegação, CRUD, upload, download e exclusão de arquivos.
+5. Corrigir os fluxos de empresas e leads para persistência cloud-first, mantendo backup local.
+6. Implementar editor/geração do projeto do cliente e pipeline de publicação.
+7. Executar testes automatizados, validar preview e revisar o diff da PR.
+8. Somente após aprovação técnica, mesclar e publicar.
 
-## Vitrines e pedidos
+## Regra de segurança operacional
 
-- O banco Arcany tem a tabela `store_orders`, mas não tem a tabela `public_storefronts`.
-- A migração opcional `20261107210000_public_storefronts.sql` não foi aplicada.
-- A página `/loja/:slug` consulta `public_storefronts`; portanto, a vitrine pública não pode ser considerada funcional até que a estrutura e as políticas necessárias sejam implementadas e testadas.
-- A versão atual da vitrine na branch de integração prepara o pedido para WhatsApp e não o registra na Arcany.
-- Não aplicar a migração opcional sem revisar as políticas de leitura pública, escrita e proteção dos dados dos pedidos.
-
-## Segredos e configuração
-
-- `.env.example` contém apenas variáveis públicas do Supabase e a variável de servidor `GOOGLE_PLACES_API_KEY` vazia.
-- Não versionar arquivos de ambiente reais nem valores de chaves privadas.
-- A chave Google Places deve permanecer somente no servidor.
-- Não usar `SUPABASE_SERVICE_ROLE_KEY` no navegador. Qualquer uso futuro deve ficar em rota de servidor com validação explícita e escopo mínimo.
-
-## Validação automatizada
-
-No workflow GitHub Actions associado ao commit `50fb78a373aa2b70c44e24427093ba5c397ace37` (run #133):
-- Auditoria de dependências: aprovada.
-- Testes de bootstrap/associação: aprovados.
-- Build de produção: aprovado.
-- Lint: aprovado.
-
-Essas verificações não substituem testes reais de autenticação, persistência, isolamento entre contas, fluxos comerciais e publicação.
-
-## Vercel
-
-- A consulta atual à equipe Vercel foi bloqueada por falta de autorização para o escopo `wchagas73-3735s-projects`.
-- Foi gerado um link de autorização de acesso à equipe, válido por 10 minutos. Após a aprovação pelo titular, será possível consultar projetos, variáveis não secretas, deployments e logs.
-- Não presumir que o deployment esteja atualizado ou pronto sem conferir o projeto correto e o commit publicado.
-
-## Próximas etapas
-
-1. Conferir a configuração de produção e o deployment Vercel.
-2. Revisar a PR inteira e preservar os módulos que devem continuar disponíveis.
-3. Implementar persistência de empresas na nuvem com backup e reconciliação não destrutiva.
-4. Fortalecer e testar a sincronização de leads.
-5. Revisar o fluxo de vitrine e pedidos antes de habilitar a migração opcional.
-6. Após o primeiro cadastro real, testar confirmação de e-mail, login/logout e isolamento entre duas contas.
-7. Só então declarar a Arcany pronta para receber assinantes em produção.
-
-## Limites de segurança e escopo
-
-- Não executar comandos no Supabase do Açougue Bom Jardim (`tbpxqtwlmpifuazmzihe`).
-- O único Supabase autorizado para a Arcany é `kiwhtyuqgvcczwtafzcn`.
-- Não apagar dados, não criar dados fictícios e não reaplicar a migração inicial.
-- Não migrar dados locais sem backup verificável e plano de reconciliação.
-
-## Biblioteca de modelos e fábrica de soluções
-
-Implementado nesta atualização na branch de integração:
-- Nova rota privada `/modelos`, incluída no menu lateral.
-- Biblioteca inicial com modelos versionados no repositório, sem criar registros de empresas ou clientes.
-- Busca por texto e filtros por nicho e tipo.
-- Detalhamento de objetivo, estrutura recomendada e funcionalidades.
-- Prompt-base de produção copiável para cada modelo.
-- Segmentos iniciais: pet, beleza, moda, calçados, varejo, alimentação, açougue, saúde e bem-estar, automotivo, imobiliário, serviços profissionais, empresas B2B e multissetorial.
-- Tipos iniciais: landing page, site institucional, catálogo, vitrine, e-commerce, cardápio, agendamento, estoque, ordens de serviço e dashboard.
-
-Limites conhecidos:
-- A biblioteca atual é estática e versionada no Git. Ainda não possui CRUD de modelos nem persistência administrativa no Supabase.
-- O prompt-base acelera o briefing e a produção, mas não gera nem publica automaticamente o projeto.
-- O configurador visual, preview funcional, geração de repositório, provisionamento de hospedagem e publicação continuam pendentes.
-- Não declarar a fábrica de soluções completa até implementar e testar o fluxo de ponta a ponta.
-- Os modelos não devem usar dados fictícios como se fossem informações reais de clientes.
-
-### Personalização de briefing dos modelos
-- A página `/modelos` agora permite preencher dados confirmados do cliente: nome, região, WhatsApp, site atual, identidade visual, materiais, regras operacionais e integrações desejadas.
-- O prompt personalizado combina o modelo escolhido com os dados informados e lista explicitamente informações pendentes.
-- A ação de copiar e visualizar o prompt funciona no navegador.
-- Os campos são temporários nesta versão: ainda não há persistência de briefings/projetos no Supabase.
-
-### Criação de projetos a partir da biblioteca
-- A rota `/projetos` agora permite selecionar um dos modelos da biblioteca, preencher o briefing e gravar um projeto na tabela `projects` do workspace.
-- O registro armazena template, segmento, estrutura, funcionalidades, dados do cliente e prompt de produção em `brief` e `preview_config`.
-- A página lista os projetos reais já salvos e permite atualizar a listagem.
-- O fluxo antigo tentava inserir em `public_storefronts`, tabela cuja migração opcional não foi aplicada. O novo fluxo não tenta publicar automaticamente nem criar uma vitrine pública.
-- O projeto é salvo com status `planejamento`. Publicação, preview público, repositório de cliente e editor visual continuam pendentes.
-- O fluxo exige autenticação e associação a um workspace; como a conta proprietária ainda não foi configurada, a gravação real não foi executada.
-
-### Restrição do acesso ao proprietário
-- A tela `/acesso` agora oferece somente login; o auto cadastro foi removido da interface.
-- O middleware e o callback verificam o e-mail autenticado contra a variável server-side `ARCANY_OWNER_EMAIL`; sem a variável, o acesso interno falha fechado.
-- O callback deixou de criar organizações automaticamente.
-- A função `public.bootstrap_organization(text)` teve EXECUTE revogado para PUBLIC, anon e authenticated. A verificação SQL confirmou que anon e authenticated não conseguem mais executá-la.
-- Ainda falta definir a variável `ARCANY_OWNER_EMAIL`, criar/convidar a conta proprietária no Supabase Auth, provisionar a organização inicial e desabilitar signup no painel Auth do Supabase.
-- A consulta confirmou zero usuários, zero organizações e zero memberships no Supabase Arcany. Nenhuma conta ou empresa foi criada.
+Nenhuma etapa desta documentação autoriza modificar dados ou configurações do projeto do Açougue Bom Jardim. Não criar clientes fictícios, não apagar dados existentes e não publicar em produção sem validação.
