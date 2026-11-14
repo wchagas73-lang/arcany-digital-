@@ -54,3 +54,14 @@ Foi preparado o script `docs/sql/20261108_tenant_privilege_hardening.sql` para:
 ## Migrações
 
 As migrações aplicadas no banco Arcany são a estrutura inicial, a restrição de permissões das funções e o endurecimento de RLS/índices. A migração opcional de páginas públicas permanece não aplicada e não é necessária para autenticação, prospecção ou CRM. Não aplicar migrações de storefront sem necessidade demonstrada e autorização específica.
+
+## Acesso privado da Arcany (modelo de agência)
+
+- O workspace é de uso exclusivo do proprietário; empresas e clientes não recebem contas na Arcany.
+- A tela de acesso não oferece cadastro público.
+- As rotas internas exigem sessão Supabase e comparação do e-mail autenticado com a variável server-side `ARCANY_OWNER_EMAIL`.
+- A variável nunca deve usar o prefixo `NEXT_PUBLIC_`.
+- Se `ARCANY_OWNER_EMAIL` não estiver configurada, o middleware bloqueia o acesso interno por padrão.
+- O callback de autenticação também valida a allowlist e encerra sessões de contas não autorizadas.
+- A função `public.bootstrap_organization(text)` teve EXECUTE revogado para `PUBLIC`, `anon` e `authenticated`. O workspace inicial será provisionado por etapa administrativa controlada após identificar a conta proprietária.
+- A configuração do Supabase Auth para desabilitar signups também precisa ser conferida no painel do projeto. Remover o botão de cadastro na interface, isoladamente, não desativa a API de signup.
