@@ -123,3 +123,9 @@ Limites conhecidos:
 - O configurador visual, preview funcional, geração de repositório, provisionamento de hospedagem e publicação continuam pendentes.
 - Não declarar a fábrica de soluções completa até implementar e testar o fluxo de ponta a ponta.
 - Os modelos não devem usar dados fictícios como se fossem informações reais de clientes.
+
+### Personalização de briefing dos modelos
+- A página `/modelos` agora permite preencher dados confirmados do cliente: nome, região, WhatsApp, site atual, identidade visual, materiais, regras operacionais e integrações desejadas.
+- O prompt personalizado combina o modelo escolhido com os dados informados e lista explicitamente informações pendentes.
+- A ação de copiar e visualizar o prompt funciona no navegador.
+- Os campos são temporários nesta versão: ainda não há persistência de briefings/projetos no Supabase.
