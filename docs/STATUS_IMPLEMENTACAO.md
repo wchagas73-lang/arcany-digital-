@@ -11,7 +11,7 @@ A Arcany Digital é o workspace privado de uma única agência, operado pelo pro
 - Repositório: `wchagas73-lang/arcany-digital-`.
 - Branch de integração: `feat/supabase-auth-protection`.
 - PR: [#1, em rascunho](https://github.com/wchagas73-lang/arcany-digital-/pull/1).
-- Commit de aplicação validado: `2077fc061450c97558874a1f29bf14cc7414c701`.
+- Commit de aplicação validado: `9d3a245136e89474f88bf573aafbd1fe3e5b1937`.
 - Supabase exclusivo da Arcany: `kiwhtyuqgvcczwtafzcn`.
 - As alterações continuam na branch de integração; não foram mescladas em `main` nem publicadas em produção.
 - O Supabase do Açougue Bom Jardim não foi acessado nem alterado.
@@ -66,7 +66,7 @@ A estrutura e o trigger foram inspecionados, mas ainda não existe uma conta rea
 
 ## Validação automatizada
 
-No GitHub Actions, execução do commit `2077fc061450c97558874a1f29bf14cc7414c701` concluída com sucesso:
+No GitHub Actions, execução do commit `9d3a245136e89474f88bf573aafbd1fe3e5b1937` concluída com sucesso:
 
 - Instalação de dependências e geração do lockfile.
 - Auditoria de vulnerabilidades.
