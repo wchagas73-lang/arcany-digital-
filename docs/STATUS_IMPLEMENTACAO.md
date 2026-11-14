@@ -129,3 +129,11 @@ Limites conhecidos:
 - O prompt personalizado combina o modelo escolhido com os dados informados e lista explicitamente informações pendentes.
 - A ação de copiar e visualizar o prompt funciona no navegador.
 - Os campos são temporários nesta versão: ainda não há persistência de briefings/projetos no Supabase.
+
+### Criação de projetos a partir da biblioteca
+- A rota `/projetos` agora permite selecionar um dos modelos da biblioteca, preencher o briefing e gravar um projeto na tabela `projects` do workspace.
+- O registro armazena template, segmento, estrutura, funcionalidades, dados do cliente e prompt de produção em `brief` e `preview_config`.
+- A página lista os projetos reais já salvos e permite atualizar a listagem.
+- O fluxo antigo tentava inserir em `public_storefronts`, tabela cuja migração opcional não foi aplicada. O novo fluxo não tenta publicar automaticamente nem criar uma vitrine pública.
+- O projeto é salvo com status `planejamento`. Publicação, preview público, repositório de cliente e editor visual continuam pendentes.
+- O fluxo exige autenticação e associação a um workspace; como a conta proprietária ainda não foi configurada, a gravação real não foi executada.
