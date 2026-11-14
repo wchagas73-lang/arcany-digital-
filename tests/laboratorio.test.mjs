@@ -23,3 +23,13 @@ test("testing laboratory is reachable from the private workspace navigation", as
   const shell = await read("../src/components/app-shell.tsx");
   assert.match(shell, /href: "\/laboratorio"/);
 });
+
+test("prospecting demo mode works without Google Places credentials", async () => {
+  const route = await read("../src/app/api/prospeccao/route.ts");
+  const page = await read("../src/app/prospeccao/page.tsx");
+  assert.match(route, /body\.demoMode === true/);
+  assert.match(route, /source: "Arcany Demo"/);
+  assert.match(route, /Dados inteiramente fictícios/);
+  assert.match(page, /setDemoMode\(true\)/);
+  assert.match(page, /demoMode/);
+});
