@@ -6,7 +6,7 @@ import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   Activity, Building2, LayoutDashboard, Search, Settings2, Globe, ShieldCheck,
-  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, LogOut, Package, Wallet, ClipboardList
+  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, LogOut, Package, Wallet, ClipboardList, FlaskConical
 } from "lucide-react";
 
 const navigation = [
@@ -24,6 +24,7 @@ const navigation = [
   { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Pedidos", href: "/pedidos", icon: ClipboardList },
   { label: "Demonstrações", href: "/demonstracoes", icon: Sparkles },
+  { label: "Laboratório de testes", href: "/laboratorio", icon: FlaskConical },
   { label: "Administração", href: "/administrativo", icon: ShieldCheck },
   { label: "Configurações", href: "/configuracoes", icon: Settings2 }
 ];
