@@ -2,6 +2,8 @@
 
 ## Definição do produto
 
+A especificação funcional completa, com módulos, fluxos integrados, critérios de aceite, regras de segurança e estratégia de custos, está em [docs/ESPECIFICACAO_PRODUTO_COMPLETA.md](ESPECIFICACAO_PRODUTO_COMPLETA.md). A especificação orienta o escopo final, mas não significa que os itens estejam implementados.
+
 A Arcany é o ambiente interno de trabalho de uma única operação de agência digital. O proprietário usa a plataforma para prospectar empresas, diagnosticar problemas, preparar propostas, desenvolver soluções digitais, publicar entregáveis e manter histórico dos serviços prestados.
 
 Empresas e clientes não recebem contas, convites ou acesso ao painel. A autenticação deve proteger somente o acesso administrativo do proprietário. O banco pode manter uma organização interna única por simplicidade, mas não deve oferecer auto cadastro, multi-tenant comercial ou onboarding de clientes.
