@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- public media URLs are customer-managed and can use arbitrary hosts. */
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -49,7 +51,7 @@ export default function PublicLandingPage() {
       </div>
     </header>
     <div style={{ maxWidth: 1080, margin: "auto", padding: "32px 20px 70px" }}>
-      {gallery.length > 0 && <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,260px),1fr))", gap: 12, marginBottom: 34 }}>{gallery.map((src, index) => {/* eslint-disable-next-line @next/next/no-img-element -- published URLs are customer-managed Supabase storage URLs. */}<img key={src} src={src} alt={(c.company || "Empresa") + " imagem " + (index + 1)} style={{ width: "100%", height: 250, objectFit: "cover", borderRadius: 14, background: "#e7eaf2" }}/>)}</section>}
+      {gallery.length > 0 && <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,260px),1fr))", gap: 12, marginBottom: 34 }}>{gallery.map((src, index) => <img key={src} src={src} alt={(c.company || "Empresa") + " imagem " + (index + 1)} style={{ width: "100%", height: 250, objectFit: "cover", borderRadius: 14, background: "#e7eaf2" }}/>)}</section>}
       {services.length > 0 && <section style={{ marginBottom: 34 }}><div style={{ color, fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>O que oferecemos</div><h2 style={{ fontSize: 28, margin: "8px 0 18px" }}>Conheça nossos serviços</h2><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,230px),1fr))", gap: 12 }}>{services.map((service, index) => <article key={index} style={{ background: "white", border: "1px solid #e8eaf0", borderRadius: 12, padding: 18 }}><div style={{ color, marginBottom: 12 }}><Star size={18}/></div><h3 style={{ fontSize: 15, margin: 0 }}>{service}</h3></article>)}</div></section>}
       <section style={{ background: "white", border: "1px solid #e8eaf0", borderRadius: 14, padding: 22, display: "flex", flexWrap: "wrap", gap: 18, justifyContent: "space-between", alignItems: "center" }}>
         <div><h2 style={{ fontSize: 21, margin: "0 0 8px" }}>Vamos conversar?</h2><p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Entre em contato para tirar dúvidas e solicitar atendimento.</p>{c.city && <p style={{ color: "#64748b", fontSize: 12, display: "flex", gap: 7, alignItems: "center" }}><MapPin size={14}/>{c.city}</p>}</div>
