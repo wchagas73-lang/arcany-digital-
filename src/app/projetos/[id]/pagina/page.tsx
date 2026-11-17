@@ -217,7 +217,7 @@ export default function LandingPageBuilder() {
               <h2 style={{ fontSize: 25, lineHeight: 1.12, margin: "12px 0" }}>{content.tagline || "Título principal da landing page"}</h2>
               <p style={{ fontSize: 12, lineHeight: 1.6, margin: 0 }}>{content.description || "A descrição confirmada do negócio aparecerá aqui."}</p>
             </div>
-            {content.heroImage && <>{/* User-selected public URLs may come from different customer domains. */}<img src={content.heroImage} alt="" style={{ width: "100%", maxHeight: 190, objectFit: "cover" }}/></>}
+            {content.heroImage && <>{/* eslint-disable-next-line @next/next/no-img-element -- customer-selected public URLs can use arbitrary domains. */}<img src={content.heroImage} alt="" style={{ width: "100%", maxHeight: 190, objectFit: "cover" }}/></>}
             <div style={{ padding: 16 }}>
               <strong style={{ fontSize: 14 }}>Conheça nossos serviços</strong>
               <div style={{ display: "grid", gap: 7, marginTop: 10 }}>{content.servicesText.split("\n").filter(Boolean).slice(0, 5).map((item, index) => <div key={index} style={{ background: "white", borderRadius: 8, padding: 10, fontSize: 11 }}>{item}</div>)}</div>
