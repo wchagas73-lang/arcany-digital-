@@ -139,11 +139,8 @@ export default function LandingPageBuilder() {
     setPublishing(true); setMessage("");
     try {
       const images = assets.filter(asset => asset.mime_type.startsWith("image/") && selectedAssetIds.includes(asset.id));
+      // Preserve the currently published media until the replacement is safely saved.
       const previousPaths = content.publishedAssetPaths || [];
-      if (previousPaths.length) {
-        const { error: cleanupError } = await db.storage.from("arcany-published-media").remove(previousPaths);
-        if (cleanupError) throw cleanupError;
-      }
       const gallery: string[] = [];
       const publishedAssetPaths: string[] = [];
       for (const asset of images) {
@@ -161,6 +158,19 @@ export default function LandingPageBuilder() {
       const publicUrl = window.location.origin + "/p/" + cleanSlug;
       const { error: projectUpdateError } = await db.from("projects").update({ status: "publicado", published_url: publicUrl }).eq("id", project.id).eq("organization_id", organizationId);
       if (projectUpdateError) throw projectUpdateError;
+
+      // Remove only files no longer referenced by the successfully saved publication.
+      // Cleanup failure must not invalidate the new publication; orphaned files can be
+      // reviewed later without breaking the page that is already live.
+      const obsoletePaths = previousPaths.filter(path => !publishedAssetPaths.includes(path));
+      if (obsoletePaths.length) {
+        try {
+          await db.storage.from("arcany-published-media").remove(obsoletePaths);
+        } catch {
+          // Keep the publication successful even if best-effort cleanup fails.
+        }
+      }
+
       setMessage("Landing page publicada. Abra o endereço público para revisar.");
       setPublished(true);
       setPublishedAt(new Date().toISOString());
