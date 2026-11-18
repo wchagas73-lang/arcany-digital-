@@ -2,9 +2,17 @@ name: Build validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/supabase-auth-protection]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: arcany-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -15,8 +23,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm install --no-package-lock
+          node-version: 22
+      - name: Generate lockfile and install dependencies
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+      - name: Audit dependency vulnerabilities
+        run: |
+          npm audit --json > npm-audit.json || true
+          node -e 'const a=require("./npm-audit.json"); const v=a.metadata?.vulnerabilities || {}; console.log(JSON.stringify({vulnerabilities:v, advisories:Object.entries(a.vulnerabilities||{}).map(([name,item])=>({name,severity:item.severity,range:item.range,fixAvailable:item.fixAvailable}))},null,2)); if ((v.total || 0) > 0) process.exit(1)'
+      - name: Validate organization bootstrap tests
+        run: npm test
       - name: Validate production build
         run: npm run build
+      - name: Validate lint
+        run: npm run lint

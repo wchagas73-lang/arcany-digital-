@@ -31,6 +31,7 @@ export default function ProspeccaoPage() {
   const [segment, setSegment] = useState("");
   const [status, setStatus] = useState("todos");
   const [focus, setFocus] = useState("geral");
+  const [demoMode, setDemoMode] = useState(true);
   const [results, setResults] = useState<Company[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function ProspeccaoPage() {
       const response = await fetch("/api/prospeccao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city, state, segment, status, focus }),
+        body: JSON.stringify({ city, state, segment, status, focus, demoMode }),
       });
       const data = await response.json();
 
@@ -92,7 +93,7 @@ export default function ProspeccaoPage() {
       const response = await fetch("/api/prospeccao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city, state, segment, status, focus, pageToken: nextPageToken }),
+        body: JSON.stringify({ city, state, segment, status, focus, demoMode, pageToken: nextPageToken }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Não foi possível carregar mais empresas.");
@@ -151,13 +152,14 @@ export default function ProspeccaoPage() {
         <div className="eyebrow">Encontrar oportunidades</div>
         <h1 className="page-title">Prospecção inteligente</h1>
         <p className="page-description">Encontre negócios por localização e segmento, avalie sua presença digital e transforme oportunidades em clientes.</p>
+        <label className="panel" style={{ display: "flex", alignItems: "center", gap: 10, padding: 13, marginTop: 14, cursor: "pointer" }}><input type="checkbox" checked={demoMode} onChange={(event) => { setDemoMode(event.target.checked); setResults([]); setSearched(false); setMessage(""); setNextPageToken(null); }} /><span><strong style={{ display: "block", fontSize: 12 }}>Modo de demonstração</strong><span style={{ color: "var(--muted)", fontSize: 11 }}>Usar empresas fictícias para testar sem Google Places e sem contatar negócios reais.</span></span><span className="coming-tag">RECOMENDADO PARA TESTES</span></label>
 
         <section className="panel" style={{ marginTop: 26, padding: 22 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 19 }}>
             <div className="empty-icon" style={{ margin: 0 }}><Search size={19} /></div>
             <div>
               <h2 style={{ fontSize: 14, margin: 0 }}>Configurar pesquisa</h2>
-              <p style={{ color: "var(--muted)", fontSize: 11, margin: "5px 0 0" }}>Pesquise empresas reais por cidade e segmento.</p>
+              <p style={{ color: "var(--muted)", fontSize: 11, margin: "5px 0 0" }}>{demoMode ? "Simule pesquisas com empresas fictícias, sem API externa." : "Pesquise empresas reais por cidade e segmento."}</p>
             </div>
           </div>
 

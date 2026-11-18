@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { ShoppingBag, Plus, Minus, MessageCircle } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 type Item={id:string;name:string;description:string;price:number;category:string};
 type Store={id:string;slug:string;title:string;description:string;config:{company:string;tagline:string;whatsapp:string;primary:string;products:Item[];kind:string}};
@@ -13,7 +13,7 @@ export default function StorefrontPage(){
  useEffect(()=>{let alive=true;async function load(){const db=getSupabaseBrowserClient();if(!db){setMessage("Página indisponível: conexão da plataforma não configurada.");setLoading(false);return;}const {data,error}=await db.from("public_storefronts").select("id,slug,title,description,config").eq("slug",params.slug).eq("published",true).maybeSingle();if(!alive)return;if(error||!data)setMessage("Esta página não existe ou não está publicada.");else setStore(data as Store);setLoading(false);}void load();return()=>{alive=false;};},[params.slug]);
  const items=store?.config.products||[];const chosen=items.filter(p=>(qty[p.id]||0)>0);const total=chosen.reduce((sum,p)=>sum+p.price*qty[p.id],0);
  const currency=(n:number)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
- async function checkout(){if(!store||!chosen.length)return;if(!name.trim()||!phone.trim()){setMessage("Informe seu nome e WhatsApp para enviar o pedido.");return;}setSending(true);setMessage("");try{const res=await fetch("/api/pedidos",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({slug:store.slug,customer_name:name,customer_phone:phone,items:chosen.map(p=>({product_id:p.id,quantity:qty[p.id]}))})});const data=await res.json();if(!res.ok)throw new Error(data.error||"Não foi possível registrar o pedido.");const digits=store.config.whatsapp?.replace(/\D/g,"")||"";const text=["Olá! Fiz um pedido em "+store.title+":",...chosen.map(p=>qty[p.id]+"x "+p.name+" — "+currency(p.price*qty[p.id])),"Total: "+currency(total),"Cliente: "+name,"WhatsApp: "+phone,"Pedido: "+data.order_id].join("\n");if(digits)window.open("https://wa.me/"+(digits.startsWith("55")?digits:"55"+digits)+"?text="+encodeURIComponent(text),"_blank","noopener,noreferrer");setMessage("Pedido registrado! "+(digits?"O WhatsApp da loja foi aberto para confirmar.":"A loja receberá o pedido quando a integração de atendimento for configurada."));setQty({});}catch(e){setMessage(e instanceof Error?e.message:"Erro ao enviar pedido.");}finally{setSending(false);}}
+ async function checkout(){if(!store||!chosen.length)return;if(!name.trim()||!phone.trim()){setMessage("Informe seu nome e WhatsApp para enviar o pedido.");return;}setSending(true);setMessage("");try{const digits=store.config.whatsapp?.replace(/\D/g,"")||"";if(!digits)throw new Error("O WhatsApp da empresa ainda não foi configurado nesta vitrine.");const text=["Olá! Gostaria de fazer um pedido em "+store.title+":",...chosen.map(p=>qty[p.id]+"x "+p.name+" — "+currency(p.price*qty[p.id])),"Total: "+currency(total),"Cliente: "+name,"WhatsApp: "+phone].join("\n");window.open("https://wa.me/"+(digits.startsWith("55")?digits:"55"+digits)+"?text="+encodeURIComponent(text),"_blank","noopener,noreferrer");setMessage("Mensagem preparada para enviar diretamente à empresa pelo WhatsApp. Nenhum pedido ou dado de cliente é armazenado na Arcany.");setQty({});}catch(e){setMessage(e instanceof Error?e.message:"Não foi possível preparar a mensagem.");}finally{setSending(false);}}
  if(loading)return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",background:"#f8fafc",color:"#334155"}}>Carregando loja...</main>;
  if(!store)return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:25,background:"#f8fafc",color:"#334155"}}>{message||"Loja não encontrada."}</main>;
  const color=store.config.primary||"#705cf5";

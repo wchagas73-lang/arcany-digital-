@@ -1,42 +1,97 @@
-# Arcany Digital — status de implementação
+# Status de implementação da Arcany Digital
 
-Atualizado em 31/10/2026.
+Atualizado em 18/11/2026.
 
-## Implementado no repositório
+## Modelo do produto
 
-- Cliente de navegador Supabase e tela de acesso/cadastro.
-- Prospecção por cidade, UF e segmento usando Google Places, com filtro de site listado e carregamento paginado de resultados.
-- Criação automática da organização no primeiro acesso autenticado.
-- Controle de estoque com cadastro de produtos, saldo inicial e movimentações de entrada, saída, perda e devolução.
-- Financeiro com lançamentos de receitas/despesas, vencimento e status.
-- CRM com leitura do banco por organização, atualização de etapas e importação inicial dos leads locais quando a base remota está vazia.
-- Leads com ação manual de sincronização para a organização autenticada.
-- Criador de projetos para site, cardápio e loja, com configuração de identidade e produtos.
-- Vitrines públicas em `/loja/[slug]`, com carrinho e envio de pedido.
-- Endpoint servidor de pedidos: valida produtos e quantidades e recalcula os preços usando a configuração publicada, sem confiar no total enviado pelo navegador.
-- Painel de pedidos com atualização de status e pagamento.
-- Migrações SQL iniciais e de vitrines públicas, com RLS e privilégios explícitos.
-- Documentação de ativação do Supabase e variáveis necessárias.
+A Arcany Digital é o workspace privado de uma única agência, operado pelo proprietário. Empresas e clientes são registros comerciais e projetos atendidos, não usuários da plataforma.
 
-## Validação
+## Ambiente e proteção de produção
 
-- A compilação de produção do commit `027b11d2` passou no GitHub Actions.
-- A compilação do criador de projetos e da vitrine pública também passou em commits anteriores.
-- O GitHub Actions confirmou sucesso para a compilação do commit `69db22e9` e para os módulos de pedidos, estoque e navegação.
-- A paginação da prospecção foi adicionada nos commits `7cbb5f1c` e `783467e5`; as respectivas execuções devem ser consultadas antes de considerar essa atualização validada.
+- Repositório: `wchagas73-lang/arcany-digital-`.
+- Branch de integração: `feat/supabase-auth-protection`.
+- PR: [#1, em rascunho](https://github.com/wchagas73-lang/arcany-digital-/pull/1).
+- Commit validado pelo CI: `9534871ce6c87419c3718ab4d0af8758255f6640`.
+- Supabase exclusivo da Arcany: `kiwhtyuqgvcczwtafzcn`.
+- Produção atual mantida na Vercel; nenhuma alteração foi mesclada em `main`.
+- O projeto Supabase do Açougue Bom Jardim não foi acessado nem alterado nesta revisão.
 
-## Dependências externas que não podem ser concluídas só pelo repositório
+## Funcionalidades implementadas na branch
 
-1. Executar as duas migrações SQL no projeto Supabase.
-2. Configurar na Vercel `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (esta última somente no servidor).
-3. Configurar a chave Google Places no servidor para a prospecção.
-4. Fazer o deploy na Vercel e validar a URL de produção.
-5. Configurar um provedor de pagamento para Pix/cartão; atualmente o fluxo registra pedido e direciona a conversa para o WhatsApp, sem cobrar online.
-6. Configurar domínio próprio e publicação independente para cada cliente; as vitrines atuais são hospedadas no domínio Arcany.
-7. Integrar baixa automática de estoque com pedidos e testar segurança com usuários de organizações diferentes.
-8. Implementar e validar cobrança online, webhooks de pagamento, reembolsos e conciliação, caso a Arcany vá receber pagamentos dentro da plataforma.
-9. Configurar monitoramento, limites de uso e alertas para as APIs externas, além de política de privacidade e termos de uso.
+### Administração e produção
+- Painel administrativo e navegação do workspace.
+- Biblioteca de modelos por nicho e tipo de solução.
+- Briefing e cadastro de projetos.
+- Fluxo de produção, revisão, aprovação, publicação e entrega.
+- Upload de logos, fotos, vídeos MP4 e PDFs em bucket privado, com limite de 25 MB.
+- Editor de landing page e publicação em `/p/[slug]`.
+- Mídias só são copiadas para o bucket público quando o proprietário as seleciona explicitamente para publicação.
 
-## Critério de conclusão
+### Autenticação e segurança
+- Cliente Supabase no navegador e no servidor com `@supabase/ssr`.
+- Middleware e callback com validação server-side do proprietário.
+- Primeiro acesso restrito ao e-mail proprietário autorizado.
+- Trigger de Auth cria/reutiliza a organização Arcany e associa o proprietário como `owner`.
+- `public.bootstrap_organization(text)` não é chamado pelo cliente e tem EXECUTE revogado para `PUBLIC`, `anon` e `authenticated`.
+- RLS habilitado nas 17 tabelas públicas.
+- Advisor de segurança do Supabase retornou zero findings na consulta de 18/11/2026.
+- Nenhuma chave service-role foi encontrada no cliente/browser.
 
-Não declarar a plataforma 100% pronta até que as migrações estejam aplicadas, as variáveis configuradas, o deploy validado e os fluxos de autenticação, isolamento multiempresa, criação/publicação de vitrine, pedido público, gestão de pedidos, estoque, CRM e financeiro sejam testados em produção.
+### Empresas e leads
+- Dados existentes permanecem no armazenamento local por conta, com chaves separadas.
+- Há sincronização manual e aditiva para `companies` e `leads`.
+- Backup JSON exporta chaves antigas e atuais sem enviar ou apagar dados.
+- CRM ainda não migra automaticamente os dados locais para a nuvem.
+- A migração definitiva dos registros locais ainda não foi executada.
+
+## Estado real do Supabase Arcany em 18/11/2026
+
+- Histórico: 9 migrações aplicadas.
+- Tabelas públicas: 17.
+- Tabelas públicas com RLS: 17.
+- Usuários Auth: 0.
+- Organizações: 0.
+- Associações em `organization_members`: 0.
+- Empresas: 0.
+- Leads: 0.
+- Advisor de segurança: zero findings.
+- Advisor de performance: 29 avisos informativos de índices ainda não utilizados; não foi feita remoção automática.
+- Buckets previstos: `arcany-client-assets` privado e `arcany-published-media` público somente para mídia aprovada.
+
+A estrutura do banco e o trigger de provisionamento foram inspecionados. Ainda não há uma conta Auth real, portanto não foi possível validar login e provisionamento ponta a ponta.
+
+## Validação automatizada
+
+GitHub Actions, execução [44103426483](https://github.com/wchagas73-lang/arcany-digital-/actions/runs/44103426483), no commit `9534871ce6c87419c3718ab4d0af8758255f6640`, concluída com sucesso:
+
+- Instalação de dependências e geração do lockfile.
+- Auditoria de vulnerabilidades.
+- Testes automatizados de provisionamento, proteção e laboratório.
+- Build de produção.
+- ESLint.
+
+A aprovação do CI comprova que os testes e a compilação passaram. Não comprova login real, CRUD, upload, publicação ou isolamento funcional em navegador.
+
+## Pendências para liberar a versão integrada
+
+1. Configurar no ambiente de produção/preview `NEXT_PUBLIC_SUPABASE_URL`, chave publicável/anon e `ARCANY_OWNER_EMAIL`.
+2. Conferir no Supabase Auth a URL base, redirect `/auth/callback` e a configuração global de signups.
+3. Executar o primeiro acesso do proprietário e confirmar o e-mail.
+4. Confirmar que o trigger criou exatamente uma organização e uma associação `owner`.
+5. Testar login, renovação de sessão, logout e bloqueio de qualquer outro e-mail.
+6. Testar CRUD de projetos, upload, download e exclusão de arquivos.
+7. Testar publicação explícita, página pública em janela anônima, WhatsApp, imagens e responsividade.
+8. Testar backup JSON em aparelho real.
+9. Só depois reconciliar empresas e leads do armazenamento local com o banco, sem apagar a origem até conferir contagens e amostras.
+
+A conta Auth ainda não existe. A senha deve ser criada pelo proprietário no formulário de primeiro acesso; não armazenar nem compartilhar credenciais no código ou no chat.
+
+## Limites e cuidados de release
+
+- O PR #1 permanece em rascunho e não deve ser mesclado até concluir os testes reais acima.
+- A produção atual deve permanecer intacta enquanto a versão integrada não passar pelos testes.
+- A Vercel retornou limite de 100 criações de deploy por dia e bloqueio temporário; não insistir em novos previews até a janela liberar.
+- A branch de migração Cloudflare é separada e não faz parte desta liberação.
+- Não aplicar novamente `initial_saas_schema`.
+- Não aplicar migrações duplicadas de storefront/storage sem necessidade demonstrada e revisão específica.
+- Não executar correções automáticas de dependências com `--force`.

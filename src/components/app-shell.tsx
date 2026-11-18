@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
-  Activity, Building2, LayoutDashboard, Search, Settings2, Globe, Wallet, ClipboardList,
-  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, Package
+  Activity, Building2, LayoutDashboard, Search, Settings2, Globe, ShieldCheck,
+  Sparkles, Target, Workflow, ClipboardCheck, Wrench, MessageSquareText, LogOut, Package, Wallet, ClipboardList, FlaskConical
 } from "lucide-react";
 
 const navigation = [
@@ -13,6 +15,7 @@ const navigation = [
   { label: "Central de vendas", href: "/vendas", icon: MessageSquareText },
   { label: "Diagnóstico", href: "/diagnostico", icon: ClipboardCheck },
   { label: "Central de soluções", href: "/solucoes", icon: Wrench },
+  { label: "Biblioteca de modelos", href: "/modelos", icon: Sparkles },
   { label: "Criar projetos", href: "/projetos", icon: Globe },
   { label: "Empresas", href: "/empresas", icon: Building2 },
   { label: "Leads", href: "/leads", icon: Target },
@@ -21,11 +24,33 @@ const navigation = [
   { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Pedidos", href: "/pedidos", icon: ClipboardList },
   { label: "Demonstrações", href: "/demonstracoes", icon: Sparkles },
+  { label: "Laboratório de testes", href: "/laboratorio", icon: FlaskConical },
+  { label: "Administração", href: "/administrativo", icon: ShieldCheck },
   { label: "Configurações", href: "/configuracoes", icon: Settings2 }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (supabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      }
+    } catch {
+      setSigningOut(false);
+      return;
+    }
+    router.replace("/acesso");
+    router.refresh();
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -56,7 +81,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="main-area">
         <header className="topbar">
           <div className="crumb">Workspace <span style={{ color: "#566176" }}>/</span> <span style={{ color: "#d8deea" }}>Arcany Digital</span></div>
-          <div className="top-actions"><Link className="nav-link" href="/acesso">Conta</Link><div className="avatar">AD</div></div>
+          <div className="top-actions">
+            <button type="button" className="nav-link" onClick={signOut} disabled={signingOut} aria-label="Sair da conta" title="Encerrar sessão">
+              <LogOut size={14} />{signingOut ? "Saindo..." : "Sair"}
+            </button>
+            <div className="avatar">AD</div>
+          </div>
         </header>
         {children}
       </main>

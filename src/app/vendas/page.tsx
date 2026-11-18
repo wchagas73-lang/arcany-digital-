@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
 import { Copy, MessageCircle, Save, Sparkles, Globe, ShoppingBag, Workflow } from "lucide-react";
 
 type Stage = "novo";
@@ -37,9 +38,10 @@ export default function VendasPage() {
     catch { alert("Não foi possível copiar automaticamente. Selecione e copie o texto da mensagem."); }
   }
 
-  function saveLead() {
+  async function saveLead() {
     if (!company.trim()) { alert("Informe o nome da empresa antes de salvar."); return; }
-    const key = "arcany-leads-v1";
+    const key = await getAccountScopedStorageKey("arcany-leads-v1");
+    if (!key) { alert("Entre na sua conta para salvar este lead."); return; }
     let current: Lead[] = [];
     try { current = JSON.parse(localStorage.getItem(key) || "[]") as Lead[]; } catch { current = []; }
     if (current.some((lead) => lead.company.trim().toLowerCase() === company.trim().toLowerCase())) {
@@ -47,7 +49,7 @@ export default function VendasPage() {
     }
     current.unshift({ id: "lead-" + Date.now(), company: company.trim(), contact: contact.trim(), phone: phone.trim(), segment: segment.trim(), interest: offers[offer].title, stage: "novo", followUp: "", notes: observation.trim() || "Lead criado na Central de vendas." });
     localStorage.setItem(key, JSON.stringify(current));
-    alert("Lead salvo na carteira. Abra o módulo Leads para acompanhar.");
+    alert("Lead salvo na carteira desta conta. Abra o módulo Leads para acompanhar.");
   }
 
   const field: React.CSSProperties = { width: "100%", minHeight: 42, border: "1px solid var(--border)", borderRadius: 9, background: "#0c121d", color: "#f3f6fb", padding: "0 11px", fontSize: 12 };

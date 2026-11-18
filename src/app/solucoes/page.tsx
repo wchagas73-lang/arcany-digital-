@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus, Minus, Trash2 } from "lucide-react";
+import { Globe, ShoppingCart, Package, Users, Wallet, BarChart3, MessageCircle, FileText, Copy, Sparkles, MapPin, Instagram, Plus, Minus } from "lucide-react";
 
 const solutions = [
   { id: "site", title: "Site profissional", description: "Apresentação da empresa, serviços, localização e contato.", icon: Globe, includes: ["Página inicial personalizada", "Sobre a empresa e serviços", "Galeria de fotos", "Localização e contato pelo WhatsApp"] },
@@ -127,6 +128,7 @@ export default function SolucoesPage() {
         <div className="eyebrow">Produção digital</div>
         <h1 className="page-title">Central de soluções</h1>
         <p className="page-description">Prepare o projeto e veja uma prévia visual personalizada enquanto preenche os dados do cliente.</p>
+        <div style={{ marginTop: 13 }}><Link href="/modelos" className="action-button" style={{ display: "inline-flex", textDecoration: "none" }}><Sparkles size={14} /> Abrir biblioteca de modelos</Link></div>
 
         <section className="panel" style={{ marginTop: 22, padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
@@ -198,7 +200,7 @@ export default function SolucoesPage() {
                 <div style={{ padding: "16px 14px 18px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><strong style={{ fontSize: 13 }}>{selected === "site" ? "Conheça a empresa" : "Destaques da loja"}</strong><span style={{ fontSize: 9, color: "#7a8495" }}>Prévia ilustrativa</span></div>
                   {selected === "site" ? <div style={{ background: "#fff", padding: 14, borderRadius: 9, border: "1px solid #e7eaf0" }}><p style={{ fontSize: 11, color: "#586174", lineHeight: 1.7, margin: 0 }}>{objective || "Aqui entra uma apresentação clara da empresa, seus serviços, diferenciais e formas de atendimento."}</p><div style={{ display: "flex", gap: 12, marginTop: 13, color: "#667085", fontSize: 9 }}><span><MapPin size={11} style={{ display: "inline", verticalAlign: "middle" }} /> Localização</span><span><Instagram size={11} style={{ display: "inline", verticalAlign: "middle" }} /> Redes sociais</span></div></div> :
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 9 }}>{products.map((product) => <div key={product.id} style={{ background: "#fff", border: "1px solid #e7eaf0", borderRadius: 9, padding: 10 }}><div style={{ height: 76, display: "grid", placeItems: "center", overflow: "hidden", background: "#f0f2f7", borderRadius: 6, color: primary, fontSize: 24 }}>{product.image ? <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "✦"}</div><strong style={{ display: "block", fontSize: 10, marginTop: 8 }}>{product.name}</strong><p style={{ fontSize: 9, color: "#778195", lineHeight: 1.4, minHeight: 25, margin: "4px 0" }}>{product.description || "Consulte mais informações."}</p><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}><strong style={{ fontSize: 11 }}>{money(product.price)}</strong><button type="button" onClick={() => changeQuantity(product.id, 1)} style={{ background: primary, color: "#fff", border: 0, borderRadius: 5, padding: "5px 7px", fontSize: 9, cursor: "pointer" }}>Adicionar</button></div></div>)}</div>}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 9 }}>{products.map((product) => <div key={product.id} style={{ background: "#fff", border: "1px solid #e7eaf0", borderRadius: 9, padding: 10 }}><div style={{ height: 76, display: "grid", placeItems: "center", overflow: "hidden", background: "#f0f2f7", borderRadius: 6, color: primary, fontSize: 24 }}>{product.image ? <>{/* eslint-disable-next-line @next/next/no-img-element -- preview URLs can use any customer host. */}<img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /></> : "✦"}</div><strong style={{ display: "block", fontSize: 10, marginTop: 8 }}>{product.name}</strong><p style={{ fontSize: 9, color: "#778195", lineHeight: 1.4, minHeight: 25, margin: "4px 0" }}>{product.description || "Consulte mais informações."}</p><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}><strong style={{ fontSize: 11 }}>{money(product.price)}</strong><button type="button" onClick={() => changeQuantity(product.id, 1)} style={{ background: primary, color: "#fff", border: 0, borderRadius: 5, padding: "5px 7px", fontSize: 9, cursor: "pointer" }}>Adicionar</button></div></div>)}</div>}
                 </div>
                 <div style={{ padding: 11, textAlign: "center", background: "#fff", color: "#929aaa", fontSize: 8, borderTop: "1px solid #e9edf2" }}>Prévia de apresentação · Conteúdo demonstrativo</div>
               </div>

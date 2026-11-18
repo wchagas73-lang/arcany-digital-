@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { ArrowUpRight, Building2, ContactRound, Search, Sparkles, Target, Workflow, Globe, Package, Wallet, ShoppingBag } from "lucide-react";
+import { getAccountScopedStorageKey } from "@/lib/supabase/account-storage";
+import { ArrowUpRight, Building2, ContactRound, Search, Sparkles, Target, Workflow, Globe } from "lucide-react";
 
 type Lead = { stage?: string };
 type Company = { id: string };
@@ -12,20 +13,25 @@ const modules = [
   { title: "Análise de presença digital", detail: "Identifique sites, avaliações e canais online.", icon: ArrowUpRight, tag: "Fazer diagnóstico", href: "/diagnostico" },
   { title: "CRM comercial", detail: "Organize contatos, etapas e acompanhamentos.", icon: ContactRound, tag: "Abrir pipeline", href: "/crm" },
   { title: "Criador de projetos", detail: "Monte sites, cardápios e vitrines digitais.", icon: Globe, tag: "Criar projeto", href: "/projetos" },
-  { title: "Controle de estoque", detail: "Cadastre produtos e acompanhe movimentações.", icon: Package, tag: "Gerenciar estoque", href: "/estoque" },
-  { title: "Financeiro", detail: "Registre receitas, despesas e vencimentos.", icon: Wallet, tag: "Abrir financeiro", href: "/financeiro" }
 ];
 
 export default function DashboardPage() {
   const [stats,setStats]=useState({companies:0,leads:0,opportunities:0,clients:0});
   const [loaded,setLoaded]=useState(false);
   useEffect(()=>{
-    try{
-      const companies=JSON.parse(localStorage.getItem("arcany-companies-v1")||"[]") as Company[];
-      const leads=JSON.parse(localStorage.getItem("arcany-leads-v1")||"[]") as Lead[];
-      setStats({companies:companies.length,leads:leads.length,opportunities:leads.filter(l=>["novo","contato","proposta","negociacao"].includes(l.stage||"")).length,clients:leads.filter(l=>l.stage==="cliente").length});
-    }catch{/* Mantém indicadores zerados se o armazenamento local estiver inválido. */}
-    setLoaded(true);
+    let active=true;
+    async function loadAccountStats(){
+      const [companyKey,leadKey]=await Promise.all([getAccountScopedStorageKey("arcany-companies-v1"),getAccountScopedStorageKey("arcany-leads-v1")]);
+      if(!active)return;
+      try{
+        const companies=companyKey?JSON.parse(localStorage.getItem(companyKey)||"[]") as Company[]:[];
+        const leads=leadKey?JSON.parse(localStorage.getItem(leadKey)||"[]") as Lead[]:[];
+        setStats({companies:companies.length,leads:leads.length,opportunities:leads.filter(l=>["novo","contato","proposta","negociacao"].includes(l.stage||"")).length,clients:leads.filter(l=>l.stage==="cliente").length});
+      }catch{/* Mantém indicadores zerados se o armazenamento local estiver inválido. */}
+      setLoaded(true);
+    }
+    void loadAccountStats();
+    return ()=>{active=false;};
   },[]);
   const cards=[
     {label:"Empresas na base",value:stats.companies,note:"Registros organizados",icon:Building2,href:"/empresas"},
@@ -50,6 +56,6 @@ export default function DashboardPage() {
         <div className="empty-state"><div className="empty-icon"><Search size={19}/></div><div className="empty-title">Encontre seu próximo cliente</div><p className="empty-copy">Pesquise por cidade e segmento, analise os sinais públicos e salve as empresas que merecem uma abordagem comercial.</p><Link className="action-button" href="/prospeccao" style={{marginTop:17}}>Iniciar prospecção <ArrowUpRight size={14}/></Link></div>
       </section>
     </div>
-    <div className="panel page-card" style={{marginTop:16}}><h2>Uma plataforma, vários mercados</h2><p>A Arcany está sendo construída para atender diferentes nichos — do comércio local aos prestadores de serviços. Os indicadores acima refletem os cadastros deste navegador; a sincronização em nuvem será implementada na próxima fase de infraestrutura.</p></div>
+    <div className="panel page-card" style={{marginTop:16}}><h2>Uma plataforma, vários mercados</h2><p>A Arcany está sendo construída para atender diferentes nichos — do comércio local aos prestadores de serviços. Os indicadores refletem os dados locais da conta neste aparelho. A sincronização completa entre dispositivos continua em desenvolvimento.</p></div>
   </div></AppShell>;
 }
