@@ -2,7 +2,7 @@ name: Build validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, cloudflare-migration]
   pull_request:
     branches: [main]
 
@@ -15,8 +15,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
       - name: Install dependencies
         run: npm install --no-package-lock
-      - name: Validate production build
-        run: npm run build
+      - name: Build for Cloudflare Workers
+        run: npx opennextjs-cloudflare build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder
+          SUPABASE_SERVICE_ROLE_KEY: build-placeholder
+          GOOGLE_PLACES_API_KEY: build-placeholder
