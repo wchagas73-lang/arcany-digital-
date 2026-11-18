@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 // A rota Node.js original permanece na Vercel para preservar DNS pinning.
